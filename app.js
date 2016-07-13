@@ -21116,14 +21116,19 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 	exports.default = _react2.default.createClass({
 	  displayName: "v8-heap-stats",
 
 	  getInitialState: function getInitialState() {
-	    return { data: null, threshold: 0.01 };
+	    return {
+	      data: null,
+	      threshold: 0.01,
+	      selected: null
+	    };
 	  },
 	  handleNewData: function handleNewData(data) {
-	    console.log(data);
 	    this.setState({ data: data });
 	  },
 
@@ -21278,10 +21283,89 @@
 	    return [labels].concat(dataset);
 	  },
 
+	  _rawData: function _rawData(key, header, selector, callback) {
+	    var data = this.selectedGCData();
+	    if (data == null) return null;
+
+	    var dataset = [['InstanceType'].concat(_toConsumableArray(header))];
+	    var _iteratorNormalCompletion4 = true;
+	    var _didIteratorError4 = false;
+	    var _iteratorError4 = undefined;
+
+	    try {
+	      for (var _iterator4 = data[key].non_empty_instance_types[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+	        var entry = _step4.value;
+
+	        if (selector(entry)) {
+	          dataset.push([entry, callback(data[key].instance_type_data[entry])]);
+	        }
+	      }
+	    } catch (err) {
+	      _didIteratorError4 = true;
+	      _iteratorError4 = err;
+	    } finally {
+	      try {
+	        if (!_iteratorNormalCompletion4 && _iterator4.return) {
+	          _iterator4.return();
+	        }
+	      } finally {
+	        if (_didIteratorError4) {
+	          throw _iteratorError4;
+	        }
+	      }
+	    }
+
+	    return dataset;
+	  },
+
+	  selectedGCData: function selectedGCData() {
+	    if (this.state.data == null) return null;
+	    if (this.state.selected == null) return null;
+
+	    return this.state.data.gcs[this.state.selected];
+	  },
+
+	  instanceTypeData: function instanceTypeData(key) {
+	    var ds = this._rawData(key, ['Memory consumption [Bytes]'], function (entry) {
+	      return !entry.startsWith("*");
+	    }, function (entry) {
+	      return entry == undefined ? 0 : entry.overall;
+	    });
+	    return ds;
+	  },
+
+	  fixedArrayData: function fixedArrayData(key) {
+	    var ds = this._rawData(key, ['Memory consumption [Bytes]'], function (entry) {
+	      return entry.startsWith("*FIXED_ARRAY_");
+	    }, function (entry) {
+	      return entry == undefined ? 0 : entry.overall;
+	    });
+	    return ds;
+	  },
+
 	  handleThresholdChange: function handleThresholdChange(e) {
 	    this.setState({
 	      data: this.state.data,
-	      threshold: e.target.value
+	      threshold: e.target.value,
+	      selected: this.state.selected
+	    });
+	  },
+
+	  handleSelection: function handleSelection(a, b) {
+	    console.log("selected: " + a + ", " + b);
+
+	    var selected = null;
+	    for (var gc in this.state.data.gcs) {
+	      if (this.state.data.gcs[gc].time == a) {
+	        selected = gc;
+	        break;
+	      }
+	    }
+
+	    this.setState({
+	      data: this.state.data,
+	      threshold: this.state.threshold,
+	      selected: selected
 	    });
 	  },
 
@@ -21294,6 +21378,15 @@
 	      isStacked: true,
 	      pointsVisible: true,
 	      pointSize: 3
+	    };
+	    var instanceTypeDistributionStyle = {
+	      height: "600px",
+	      width: "100%"
+	    };
+	    var instanceTypeDistributionChartStyle = {
+	      width: "50%",
+	      height: "600px",
+	      float: "left"
 	    };
 	    return _react2.default.createElement(
 	      "div",
@@ -21322,7 +21415,40 @@
 	      ),
 	      "Threshold for single InstanceType ",
 	      _react2.default.createElement("input", { ref: "threshold", type: "text", value: this.state.threshold, onChange: this.handleThresholdChange }),
-	      _react2.default.createElement(_basicCharts.AreaChart, { chartData: this.timelineDataGrouped(), chartStyle: timelineStyle, chartOptions: timelineOptions })
+	      _react2.default.createElement(_basicCharts.AreaChart, { chartData: this.timelineDataGrouped(),
+	        chartStyle: timelineStyle,
+	        chartOptions: timelineOptions,
+	        handleSelection: this.handleSelection }),
+	      _react2.default.createElement(
+	        "h2",
+	        null,
+	        "InstanceType Distribution"
+	      ),
+	      _react2.default.createElement(
+	        "div",
+	        { ref: "instance_type_distribution", style: instanceTypeDistributionStyle },
+	        _react2.default.createElement(_basicCharts.PieChart, { chartData: this.instanceTypeData("live"),
+	          chartOptions: null,
+	          chartStyle: instanceTypeDistributionChartStyle }),
+	        _react2.default.createElement(_basicCharts.PieChart, { chartData: this.instanceTypeData("dead"),
+	          chartOptions: null,
+	          chartStyle: instanceTypeDistributionChartStyle })
+	      ),
+	      _react2.default.createElement(
+	        "h2",
+	        null,
+	        "FixedArray Distribution"
+	      ),
+	      _react2.default.createElement(
+	        "div",
+	        { ref: "instance_type_distribution", style: instanceTypeDistributionStyle },
+	        _react2.default.createElement(_basicCharts.PieChart, { chartData: this.fixedArrayData("live"),
+	          chartOptions: null,
+	          chartStyle: instanceTypeDistributionChartStyle }),
+	        _react2.default.createElement(_basicCharts.PieChart, { chartData: this.fixedArrayData("dead"),
+	          chartOptions: null,
+	          chartStyle: instanceTypeDistributionChartStyle })
+	      )
 	    );
 	  }
 	});
@@ -21432,7 +21558,8 @@
 	              console.log("Unknown entry type: " + entry.type);
 	            }
 	          }
-	          // Create a ranked instance type array that sorts instance types by memory size (overall).
+
+	          // TODO: Get rid of this once counts/sizes match.
 	        } catch (err) {
 	          _didIteratorError = true;
 	          _iteratorError = err;
@@ -21448,6 +21575,13 @@
 	          }
 	        }
 
+	        function fixNegativeValue(obj, property) {
+	          if (obj[property] < 0) {
+	            console.log("Fixing propery '" + property + "' to 0. old value: " + obj[property]);
+	            obj[property] = 0;
+	          }
+	        }
+
 	        for (var gc in data.gcs) {
 	          var _iteratorNormalCompletion2 = true;
 	          var _didIteratorError2 = false;
@@ -21458,6 +21592,7 @@
 	              var key = _step2.value;
 
 	              var data_set = data.gcs[gc][key];
+	              // (1) Create a ranked instance type array that sorts instance types by memory size (overall).
 	              data_set.ranked_instance_types = [].concat(_toConsumableArray(data_set.non_empty_instance_types));
 	              data_set.ranked_instance_types = data_set.ranked_instance_types.sort(function (a, b) {
 	                if (data_set.instance_type_data[a].overall > data_set.instance_type_data[b].overall) {
@@ -21467,6 +21602,25 @@
 	                }
 	                return 0;
 	              });
+
+	              // (2) Create *FIXED_ARRAY_UNKNOWN_SUB_TYPE that account for all missing fixed array sub types.
+	              var fixed_array_data = Object.assign({}, data_set.instance_type_data.FIXED_ARRAY_TYPE);
+	              for (var instance_type in data_set.instance_type_data) {
+	                if (!instance_type.startsWith("*FIXED_ARRAY")) continue;
+	                var subtype = data_set.instance_type_data[instance_type];
+	                fixed_array_data.count -= subtype.count;
+	                fixed_array_data.overall -= subtype.overall;
+	                for (var i = 0; i < fixed_array_data.overall_histogram.length; i++) {
+	                  fixed_array_data.overall_histogram[i] -= subtype.overall_histogram[i];
+	                }
+	              }
+	              fixNegativeValue(fixed_array_data, "count");
+	              fixNegativeValue(fixed_array_data, "overall");
+	              for (var _i = 0; _i < fixed_array_data.overall_histogram.length; _i++) {
+	                fixNegativeValue(fixed_array_data.overall_histogram, _i);
+	              }
+	              data_set.instance_type_data["*FIXED_ARRAY_UNKNOWN_SUB_TYPE"] = fixed_array_data;
+	              data_set.non_empty_instance_types.add("*FIXED_ARRAY_UNKNOWN_SUB_TYPE");
 	            };
 
 	            for (var _iterator2 = keys[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
@@ -21537,7 +21691,7 @@
 /* 174 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 
 	var _react = __webpack_require__(1);
 
@@ -21546,7 +21700,7 @@
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var AreaChart = _react2.default.createClass({
-	  displayName: "AreaChart",
+	  displayName: 'AreaChart',
 
 	  getInitialState: function getInitialState() {
 	    return { chart: null };
@@ -21560,7 +21714,47 @@
 	    this._clearChartIfNecessary();
 	    if (this.props.chartData == null) return;
 
+	    var data = google.visualization.arrayToDataTable(this.props.chartData);
 	    var chart = new google.visualization.AreaChart(this.refs.chart);
+	    chart.draw(data, this.props.chartOptions);
+	    this.state.chart = chart;
+
+	    var selectHandler = function () {
+	      var selectedItem = chart.getSelection()[0];
+	      if (selectedItem && 'handleSelection' in this.props) {
+	        this.props.handleSelection(data.getValue(selectedItem.row, 0), data.getColumnLabel(selectedItem.column));
+	      }
+	    }.bind(this);
+	    google.visualization.events.addListener(chart, 'select', selectHandler);
+	  },
+	  componentDidUpdate: function componentDidUpdate() {
+	    this.update();
+	  },
+	  render: function render() {
+	    return _react2.default.createElement(
+	      'div',
+	      null,
+	      _react2.default.createElement('div', { ref: 'chart', style: this.props.chartStyle })
+	    );
+	  }
+	});
+
+	var PieChart = _react2.default.createClass({
+	  displayName: 'PieChart',
+
+	  getInitialState: function getInitialState() {
+	    return { chart: null };
+	  },
+	  _clearChartIfNecessary: function _clearChartIfNecessary() {
+	    if (this.state.chart != null) {
+	      this.state.chart.clearChart();
+	    }
+	  },
+	  update: function update(e) {
+	    this._clearChartIfNecessary();
+	    if (this.props.chartData == null) return;
+
+	    var chart = new google.visualization.PieChart(this.refs.chart);
 	    chart.draw(google.visualization.arrayToDataTable(this.props.chartData), this.props.chartOptions);
 	    this.state.chart = chart;
 	  },
@@ -21569,15 +21763,16 @@
 	  },
 	  render: function render() {
 	    return _react2.default.createElement(
-	      "div",
+	      'div',
 	      null,
-	      _react2.default.createElement("div", { ref: "chart", style: this.props.chartStyle })
+	      _react2.default.createElement('div', { ref: 'chart', style: this.props.chartStyle })
 	    );
 	  }
 	});
 
 	module.exports = {
-	  AreaChart: AreaChart
+	  AreaChart: AreaChart,
+	  PieChart: PieChart
 	};
 
 /***/ }
