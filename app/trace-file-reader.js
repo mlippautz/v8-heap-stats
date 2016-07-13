@@ -78,10 +78,19 @@ export default React.createClass({
             console.log("Unknown entry type: " + entry.type);
           }
         }
-        // Create a ranked instance type array that sorts instance types by memory size (overall).
+
+        // TODO: Get rid of this once counts/sizes match.
+        function fixNegativeValue(obj, property) {
+          if (obj[property] < 0) {
+            console.log("Fixing propery '" + property + "' to 0. old value: " + obj[property]);
+            obj[property] = 0;
+          }
+        }
+
         for (let gc in data.gcs) {
           for (let key of keys) {
             let data_set = data.gcs[gc][key];
+            // (1) Create a ranked instance type array that sorts instance types by memory size (overall).
             data_set.ranked_instance_types = [... data_set.non_empty_instance_types ];
             data_set.ranked_instance_types = data_set.ranked_instance_types.sort(function(a,b) {
               if (data_set.instance_type_data[a].overall > data_set.instance_type_data[b].overall) {
@@ -91,6 +100,25 @@ export default React.createClass({
               }
               return 0;
             });
+
+            // (2) Create *FIXED_ARRAY_UNKNOWN_SUB_TYPE that account for all missing fixed array sub types.
+            let fixed_array_data = Object.assign({}, data_set.instance_type_data.FIXED_ARRAY_TYPE);
+            for (let instance_type in data_set.instance_type_data) {
+              if (!instance_type.startsWith("*FIXED_ARRAY")) continue;
+              let subtype = data_set.instance_type_data[instance_type];
+              fixed_array_data.count -= subtype.count;
+              fixed_array_data.overall -= subtype.overall;
+              for (let i = 0; i < fixed_array_data.overall_histogram.length; i++) {
+                fixed_array_data.overall_histogram[i] -= subtype.overall_histogram[i];
+              }
+            }
+            fixNegativeValue(fixed_array_data, "count");
+            fixNegativeValue(fixed_array_data, "overall");
+            for (let i = 0; i < fixed_array_data.overall_histogram.length; i++) {
+              fixNegativeValue(fixed_array_data.overall_histogram, i);
+            }
+            data_set.instance_type_data["*FIXED_ARRAY_UNKNOWN_SUB_TYPE"] = fixed_array_data;
+            data_set.non_empty_instance_types.add("*FIXED_ARRAY_UNKNOWN_SUB_TYPE");
           }
         }
         this.handleDone(data, true, file.name);

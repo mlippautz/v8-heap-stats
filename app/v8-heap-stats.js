@@ -1,14 +1,17 @@
 import React from "react";
 
 import TraceFileReader from "./trace-file-reader"
-import {AreaChart} from "./basic-charts"
+import {AreaChart, PieChart} from "./basic-charts"
 
 export default React.createClass({
   getInitialState: function() {
-    return { data: null, threshold: 0.01 };
+    return {
+      data: null,
+      threshold: 0.01,
+      selected: null
+    };
   },
   handleNewData: function(data) {
-    console.log(data);
     this.setState({data: data});
   },
 
@@ -100,10 +103,67 @@ export default React.createClass({
     return [labels, ...dataset];
   },
 
+  _rawData: function(key, header, selector, callback) {
+    let data = this.selectedGCData();
+    if (data == null) return null;
+
+    let dataset = [['InstanceType', ...header]];
+    for (let entry of data[key].non_empty_instance_types) {
+      if (selector(entry)) {
+        dataset.push([entry, callback(data[key].instance_type_data[entry])]);
+      }
+    }
+    return dataset;
+  },
+
+  selectedGCData: function() {
+    if (this.state.data == null) return null;
+    if (this.state.selected == null) return null;
+
+    return this.state.data.gcs[this.state.selected];
+  },
+
+  instanceTypeData: function(key) {
+    let ds = this._rawData(
+      key,
+      ['Memory consumption [Bytes]'],
+      (entry) => !entry.startsWith("*"),
+      (entry) => entry == undefined ? 0 : entry.overall);
+    return ds;
+  },
+
+  fixedArrayData: function(key) {
+    let ds = this._rawData(
+      key,
+      ['Memory consumption [Bytes]'],
+      (entry) => entry.startsWith("*FIXED_ARRAY_"),
+      (entry) => entry == undefined ? 0 : entry.overall);
+    return ds;
+  },
+
   handleThresholdChange: function(e) {
     this.setState({
       data: this.state.data,
-      threshold: e.target.value
+      threshold: e.target.value,
+      selected: this.state.selected
+    });
+  },
+
+  handleSelection: function(a,b) {
+    console.log("selected: " + a + ", " + b)
+
+    let selected = null;
+    for (let gc in this.state.data.gcs) {
+      if (this.state.data.gcs[gc].time == a) {
+        selected = gc;
+        break;
+      }
+    }
+
+    this.setState({
+      data: this.state.data,
+      threshold: this.state.threshold,
+      selected: selected
     });
   },
 
@@ -117,6 +177,15 @@ export default React.createClass({
       pointsVisible: true,
       pointSize: 3,
     };
+    let instanceTypeDistributionStyle = {
+      height: "600px",
+      width: "100%"
+    };
+    let instanceTypeDistributionChartStyle= {
+      width: "50%",
+      height: "600px",
+      float: "left",
+    };
     return (
       <div >
         <TraceFileReader onNewData={this.handleNewData} />
@@ -126,7 +195,28 @@ export default React.createClass({
         </p>
         <h2>Timeline</h2>
         Threshold for single InstanceType <input ref="threshold" type="text" value={this.state.threshold} onChange={this.handleThresholdChange} />
-        <AreaChart chartData={this.timelineDataGrouped()} chartStyle={timelineStyle} chartOptions={timelineOptions} />
+        <AreaChart chartData={this.timelineDataGrouped()}
+                   chartStyle={timelineStyle}
+                   chartOptions={timelineOptions}
+                   handleSelection={this.handleSelection} />
+        <h2>InstanceType Distribution</h2>
+        <div ref="instance_type_distribution" style={instanceTypeDistributionStyle}>
+          <PieChart chartData={this.instanceTypeData("live")}
+                    chartOptions={null} 
+                    chartStyle={instanceTypeDistributionChartStyle} />
+          <PieChart chartData={this.instanceTypeData("dead")}
+                    chartOptions={null}
+                    chartStyle={instanceTypeDistributionChartStyle} />
+        </div>
+        <h2>FixedArray Distribution</h2>
+        <div ref="instance_type_distribution" style={instanceTypeDistributionStyle}>
+          <PieChart chartData={this.fixedArrayData("live")}
+                    chartOptions={null}
+                    chartStyle={instanceTypeDistributionChartStyle} />
+          <PieChart chartData={this.fixedArrayData("dead")}
+                    chartOptions={null}
+                    chartStyle={instanceTypeDistributionChartStyle} />
+        </div>
       </div>
     );
   },
