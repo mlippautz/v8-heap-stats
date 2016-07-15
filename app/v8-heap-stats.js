@@ -1,7 +1,7 @@
 import React from "react";
 
 import TraceFileReader from "./trace-file-reader"
-import {AreaChart, PieChart} from "./basic-charts"
+import {AreaChart, BarChart, PieChart} from "./basic-charts"
 
 export default React.createClass({
   getInitialState: function() {
@@ -110,7 +110,7 @@ export default React.createClass({
     let dataset = [['InstanceType', ...header]];
     for (let entry of data[key].non_empty_instance_types) {
       if (selector(entry)) {
-        dataset.push([entry, callback(data[key].instance_type_data[entry])]);
+        dataset.push([entry, ...callback(data[key].instance_type_data[entry])]);
       }
     }
     return dataset;
@@ -128,7 +128,7 @@ export default React.createClass({
       key,
       ['Memory consumption [Bytes]'],
       (entry) => !entry.startsWith("*"),
-      (entry) => entry == undefined ? 0 : entry.overall);
+      (entry) => entry == undefined ? 0 : [entry.overall]);
     return ds;
   },
 
@@ -137,7 +137,19 @@ export default React.createClass({
       key,
       ['Memory consumption [Bytes]'],
       (entry) => entry.startsWith("*FIXED_ARRAY_"),
-      (entry) => entry == undefined ? 0 : entry.overall);
+      (entry) => entry == undefined ? 0 : [entry.overall]);
+    return ds;
+  },
+
+
+  fixedArrayOverheadData: function(key) {
+    let ds = this._rawData(
+      key,
+      ['Payload [Bytes]', 'Overhead [Bytes]'],
+      (entry) => entry.startsWith("*FIXED_ARRAY_"),
+      (entry) => entry == undefined ? [0,0] : [entry.overall, entry.over_allocated]
+      );
+    console.log(ds);
     return ds;
   },
 
@@ -186,6 +198,23 @@ export default React.createClass({
       height: "600px",
       float: "left",
     };
+    let fixedArrayOverheadStyle = {
+      height: "600px",
+      width: "100%"
+    };
+    let fixedArrayOverheadChartStyle = {
+      width: "50%",
+      height: "600px",
+      float: "left",
+    };
+    let fixedArrayOverheadOptions = {
+      vAxis: {
+        textStyle: {
+          fontSize: 10
+        }
+      },
+      isStacked: true
+    };
     return (
       <div >
         <TraceFileReader onNewData={this.handleNewData} />
@@ -209,13 +238,22 @@ export default React.createClass({
                     chartStyle={instanceTypeDistributionChartStyle} />
         </div>
         <h2>FixedArray Distribution</h2>
-        <div ref="instance_type_distribution" style={instanceTypeDistributionStyle}>
+        <div ref="fixed_array_distribution" style={instanceTypeDistributionStyle}>
           <PieChart chartData={this.fixedArrayData("live")}
                     chartOptions={null}
                     chartStyle={instanceTypeDistributionChartStyle} />
           <PieChart chartData={this.fixedArrayData("dead")}
                     chartOptions={null}
                     chartStyle={instanceTypeDistributionChartStyle} />
+        </div>
+        <h2>FixedArray Overhead</h2>
+        <div ref="fixed_array_overhead" style={fixedArrayOverheadStyle}>
+          <BarChart chartData={this.fixedArrayOverheadData("live")}
+                    chartOptions={fixedArrayOverheadOptions}
+                    chartStyle={fixedArrayOverheadChartStyle} />
+          <BarChart chartData={this.fixedArrayOverheadData("dead")}
+                    chartOptions={fixedArrayOverheadOptions}
+                    chartStyle={fixedArrayOverheadChartStyle} />
         </div>
       </div>
     );
