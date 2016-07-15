@@ -21352,7 +21352,7 @@
 	    return this._rawData(key, ['Payload [Bytes]', 'Overhead [Bytes]'], function (entry) {
 	      return entry.startsWith("*FIXED_ARRAY_");
 	    }, function (entry) {
-	      return entry == undefined ? [0, 0] : [entry.overall, entry.over_allocated];
+	      return entry == undefined ? [0, 0] : [entry.overall - entry.over_allocated, entry.over_allocated];
 	    });
 	  },
 
