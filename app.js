@@ -21118,6 +21118,9 @@
 
 	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
+	var KB = 1024;
+	var MB = 1024 * KB;
+
 	exports.default = _react2.default.createClass({
 	  displayName: "v8-heap-stats",
 
@@ -21242,7 +21245,7 @@
 	        if (gc_count == 0) labels.push(_instance_type2);
 	        var instance_type_data = per_gc_data[gc]["live"].instance_type_data;
 	        if (_instance_type2 in instance_type_data) {
-	          dataset[gc_count].push(instance_type_data[_instance_type2].overall);
+	          dataset[gc_count].push(instance_type_data[_instance_type2].overall / KB);
 	        } else {
 	          dataset[gc_count].push(0);
 	        }
@@ -21258,7 +21261,7 @@
 
 	          var instance_type_data = per_gc_data[gc]["live"].instance_type_data;
 	          if (_instance_type3 in instance_type_data) {
-	            other += instance_type_data[_instance_type3].overall;
+	            other += instance_type_data[_instance_type3].overall / KB;
 	          }
 	        }
 	      } catch (err) {
@@ -21335,6 +21338,7 @@
 	  },
 
 	  typeName: function typeName(full_name) {
+	    if (full_name == null) return null;
 	    return full_name.slice(0, -"_TYPE".length);
 	  },
 
@@ -21421,13 +21425,20 @@
 
 	  render: function render() {
 	    var timelineStyle = {
-	      width: "100%",
-	      height: "600px"
+	      width: "90%",
+	      height: "600px",
+	      margin: 'auto'
 	    };
 	    var timelineOptions = {
 	      isStacked: true,
 	      pointsVisible: true,
-	      pointSize: 3
+	      pointSize: 3,
+	      hAxis: {
+	        title: "Time [ms]"
+	      },
+	      vAxis: {
+	        title: "Memory consumption [KBytes]"
+	      }
 	    };
 	    var instanceTypeDistributionStyle = {
 	      height: "600px",
@@ -21460,18 +21471,13 @@
 	        1: { color: '#DC3912' }
 	      }
 	    };
+
 	    var instanceTypeSizeOptions = {
-	      bars: 'vertical'
+	      bars: 'vertical',
+	      legend: { position: 'none' }
 	    };
-	    var instanceTypeSizeChartStyle = {
-	      width: "50%",
-	      height: "300px",
-	      float: "left"
-	    };
-	    var instanceTypeSizeStyle = {
-	      width: "100%",
-	      height: "300px"
-	    };
+	    var instanceTypeSizeHeight = "300px";
+
 	    return _react2.default.createElement(
 	      "div",
 	      null,
@@ -21493,81 +21499,125 @@
 	        "."
 	      ),
 	      _react2.default.createElement(
-	        "h2",
-	        null,
-	        "Timeline"
-	      ),
-	      "Threshold for single InstanceType ",
-	      _react2.default.createElement("input", { ref: "threshold", type: "text", value: this.state.threshold, onChange: this.handleThresholdChange }),
-	      _react2.default.createElement(_basicCharts.AreaChart, { chartData: this.timelineDataGrouped(),
-	        chartStyle: timelineStyle,
-	        chartOptions: timelineOptions,
-	        handleSelection: this.handleSelection }),
-	      _react2.default.createElement(
-	        "h2",
-	        null,
-	        "InstanceType Distribution"
+	        "div",
+	        { style: { display: this.state.data == null ? "none" : "inline" } },
+	        _react2.default.createElement(
+	          "h2",
+	          null,
+	          "Timeline"
+	        ),
+	        _react2.default.createElement(
+	          "p",
+	          null,
+	          "The plot shows the memory consumption for each instance type over time. Each data point corresponds to a sample collected during a major GC. Lines stack, i.e., the top line shows the overall memory consumption. Select a data point to inspect details."
+	        ),
+	        _react2.default.createElement(
+	          "p",
+	          null,
+	          "Threshold for single InstanceType: ",
+	          _react2.default.createElement("input", { ref: "threshold", type: "text", value: this.state.threshold, onChange: this.handleThresholdChange }),
+	          ". The threshold determines which values to fold into the 'Other' category."
+	        ),
+	        _react2.default.createElement(_basicCharts.AreaChart, { chartData: this.timelineDataGrouped(),
+	          chartStyle: timelineStyle,
+	          chartOptions: timelineOptions,
+	          handleSelection: this.handleSelection })
 	      ),
 	      _react2.default.createElement(
 	        "div",
-	        { ref: "instance_type_distribution", style: instanceTypeDistributionStyle },
-	        _react2.default.createElement(_basicCharts.PieChart, { chartData: this.instanceTypeData("live"),
-	          chartOptions: null,
-	          chartStyle: instanceTypeDistributionChartStyle }),
-	        _react2.default.createElement(_basicCharts.PieChart, { chartData: this.instanceTypeData("dead"),
-	          chartOptions: null,
-	          chartStyle: instanceTypeDistributionChartStyle })
-	      ),
-	      _react2.default.createElement(
-	        "h2",
-	        null,
-	        "FixedArray Distribution"
-	      ),
-	      _react2.default.createElement(
-	        "div",
-	        { ref: "fixed_array_distribution", style: instanceTypeDistributionStyle },
-	        _react2.default.createElement(_basicCharts.PieChart, { chartData: this.fixedArrayData("live"),
-	          chartOptions: null,
-	          chartStyle: instanceTypeDistributionChartStyle }),
-	        _react2.default.createElement(_basicCharts.PieChart, { chartData: this.fixedArrayData("dead"),
-	          chartOptions: null,
-	          chartStyle: instanceTypeDistributionChartStyle })
-	      ),
-	      _react2.default.createElement(
-	        "h2",
-	        null,
-	        "FixedArray Overhead"
-	      ),
-	      _react2.default.createElement(
-	        "div",
-	        { ref: "fixed_array_overhead", style: fixedArrayOverheadStyle },
-	        _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadData("live"),
-	          chartOptions: fixedArrayOverheadOptions,
-	          chartStyle: fixedArrayOverheadChartStyle }),
-	        _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadData("dead"),
-	          chartOptions: fixedArrayOverheadOptions,
-	          chartStyle: fixedArrayOverheadChartStyle })
-	      ),
-	      _react2.default.createElement(
-	        "h2",
-	        null,
-	        "InstanceType Size Histogram"
-	      ),
-	      _react2.default.createElement(
-	        "p",
-	        null,
-	        "Selected InstanceType: ",
-	        this.selectedInstanceType()
+	        { style: { display: this.selectedInstanceType() == null ? "none" : "inline" } },
+	        _react2.default.createElement(
+	          "h2",
+	          null,
+	          _react2.default.createElement(
+	            "tt",
+	            null,
+	            this.typeName(this.selectedInstanceType())
+	          ),
+	          " Size Histogram"
+	        ),
+	        _react2.default.createElement(
+	          "p",
+	          null,
+	          "Plot shows the size histogram for the selected instance type."
+	        ),
+	        _react2.default.createElement(
+	          "div",
+	          { ref: "instance_type_size_distribution", style: null },
+	          _react2.default.createElement(
+	            "div",
+	            { style: { width: '50%', float: 'left' } },
+	            _react2.default.createElement(
+	              "h3",
+	              { style: { textAlign: 'center' } },
+	              "Live"
+	            ),
+	            _react2.default.createElement(_basicCharts.BarChart, { chartData: this.instanceTypeSizeData(this.selectedInstanceType(), "live"),
+	              chartOptions: instanceTypeSizeOptions,
+	              chartStyle: { height: instanceTypeSizeHeight, margin: '30px' } })
+	          ),
+	          _react2.default.createElement(
+	            "div",
+	            { style: { width: '50%', float: 'left' } },
+	            _react2.default.createElement(
+	              "h3",
+	              { style: { textAlign: 'center' } },
+	              "Dead"
+	            ),
+	            _react2.default.createElement(_basicCharts.BarChart, { chartData: this.instanceTypeSizeData(this.selectedInstanceType(), "dead"),
+	              chartOptions: instanceTypeSizeOptions,
+	              chartStyle: { height: instanceTypeSizeHeight, margin: '30px' } })
+	          )
+	        )
 	      ),
 	      _react2.default.createElement(
 	        "div",
-	        { ref: "instance_type_size_distribution", style: instanceTypeSizeStyle },
-	        _react2.default.createElement(_basicCharts.BarChart, { chartData: this.instanceTypeSizeData(this.selectedInstanceType(), "live"),
-	          chartOptions: instanceTypeSizeOptions,
-	          chartStyle: instanceTypeSizeChartStyle }),
-	        _react2.default.createElement(_basicCharts.BarChart, { chartData: this.instanceTypeSizeData(this.selectedInstanceType(), "dead"),
-	          chartOptions: instanceTypeSizeOptions,
-	          chartStyle: instanceTypeSizeChartStyle })
+	        { style: { display: this.selectedGCData() == null ? "none" : "inline" } },
+	        _react2.default.createElement(
+	          "h2",
+	          null,
+	          "InstanceType Distribution"
+	        ),
+	        _react2.default.createElement(
+	          "div",
+	          { ref: "instance_type_distribution", style: instanceTypeDistributionStyle },
+	          _react2.default.createElement(_basicCharts.PieChart, { chartData: this.instanceTypeData("live"),
+	            chartOptions: null,
+	            chartStyle: instanceTypeDistributionChartStyle }),
+	          _react2.default.createElement(_basicCharts.PieChart, { chartData: this.instanceTypeData("dead"),
+	            chartOptions: null,
+	            chartStyle: instanceTypeDistributionChartStyle })
+	        ),
+	        _react2.default.createElement(
+	          "h2",
+	          null,
+	          "FixedArray Distribution"
+	        ),
+	        _react2.default.createElement(
+	          "div",
+	          { ref: "fixed_array_distribution", style: instanceTypeDistributionStyle },
+	          _react2.default.createElement(_basicCharts.PieChart, { chartData: this.fixedArrayData("live"),
+	            chartOptions: null,
+	            chartStyle: instanceTypeDistributionChartStyle }),
+	          _react2.default.createElement(_basicCharts.PieChart, { chartData: this.fixedArrayData("dead"),
+	            chartOptions: null,
+	            chartStyle: instanceTypeDistributionChartStyle })
+	        ),
+	        _react2.default.createElement(
+	          "h2",
+	          null,
+	          "FixedArray Overhead"
+	        ),
+	        _react2.default.createElement(
+	          "div",
+	          { ref: "fixed_array_overhead", style: fixedArrayOverheadStyle },
+	          _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadData("live"),
+	            chartOptions: fixedArrayOverheadOptions,
+	            chartStyle: fixedArrayOverheadChartStyle }),
+	          _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadData("dead"),
+	            chartOptions: fixedArrayOverheadOptions,
+	            chartStyle: fixedArrayOverheadChartStyle })
+	        )
 	      )
 	    );
 	  }
