@@ -21381,6 +21381,8 @@
 	  },
 
 	  instanceTypeSizeData: function instanceTypeSizeData(instance_type, key) {
+	    if (instance_type == null) return null;
+
 	    var selected_gc_data = this.selectedGCData();
 	    if (selected_gc_data == null) return null;
 
@@ -21406,6 +21408,8 @@
 
 	  handleSelection: function handleSelection(a, b) {
 	    console.log("selected: " + a + ", " + b);
+
+	    if (b === "Other") b = null;
 
 	    var selected = null;
 	    for (var gc in this.state.data.gcs) {
