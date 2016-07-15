@@ -21297,7 +21297,7 @@
 	        var entry = _step4.value;
 
 	        if (selector(entry)) {
-	          dataset.push([entry, callback(data[key].instance_type_data[entry])]);
+	          dataset.push([entry].concat(_toConsumableArray(callback(data[key].instance_type_data[entry]))));
 	        }
 	      }
 	    } catch (err) {
@@ -21329,7 +21329,7 @@
 	    var ds = this._rawData(key, ['Memory consumption [Bytes]'], function (entry) {
 	      return !entry.startsWith("*");
 	    }, function (entry) {
-	      return entry == undefined ? 0 : entry.overall;
+	      return entry == undefined ? 0 : [entry.overall];
 	    });
 	    return ds;
 	  },
@@ -21338,8 +21338,18 @@
 	    var ds = this._rawData(key, ['Memory consumption [Bytes]'], function (entry) {
 	      return entry.startsWith("*FIXED_ARRAY_");
 	    }, function (entry) {
-	      return entry == undefined ? 0 : entry.overall;
+	      return entry == undefined ? 0 : [entry.overall];
 	    });
+	    return ds;
+	  },
+
+	  fixedArrayOverheadData: function fixedArrayOverheadData(key) {
+	    var ds = this._rawData(key, ['Payload [Bytes]', 'Overhead [Bytes]'], function (entry) {
+	      return entry.startsWith("*FIXED_ARRAY_");
+	    }, function (entry) {
+	      return entry == undefined ? [0, 0] : [entry.overall, entry.over_allocated];
+	    });
+	    console.log(ds);
 	    return ds;
 	  },
 
@@ -21387,6 +21397,23 @@
 	      width: "50%",
 	      height: "600px",
 	      float: "left"
+	    };
+	    var fixedArrayOverheadStyle = {
+	      height: "600px",
+	      width: "100%"
+	    };
+	    var fixedArrayOverheadChartStyle = {
+	      width: "50%",
+	      height: "600px",
+	      float: "left"
+	    };
+	    var fixedArrayOverheadOptions = {
+	      vAxis: {
+	        textStyle: {
+	          fontSize: 10
+	        }
+	      },
+	      isStacked: true
 	    };
 	    return _react2.default.createElement(
 	      "div",
@@ -21441,13 +21468,28 @@
 	      ),
 	      _react2.default.createElement(
 	        "div",
-	        { ref: "instance_type_distribution", style: instanceTypeDistributionStyle },
+	        { ref: "fixed_array_distribution", style: instanceTypeDistributionStyle },
 	        _react2.default.createElement(_basicCharts.PieChart, { chartData: this.fixedArrayData("live"),
 	          chartOptions: null,
 	          chartStyle: instanceTypeDistributionChartStyle }),
 	        _react2.default.createElement(_basicCharts.PieChart, { chartData: this.fixedArrayData("dead"),
 	          chartOptions: null,
 	          chartStyle: instanceTypeDistributionChartStyle })
+	      ),
+	      _react2.default.createElement(
+	        "h2",
+	        null,
+	        "FixedArray Overhead"
+	      ),
+	      _react2.default.createElement(
+	        "div",
+	        { ref: "fixed_array_overhead", style: fixedArrayOverheadStyle },
+	        _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadData("live"),
+	          chartOptions: fixedArrayOverheadOptions,
+	          chartStyle: fixedArrayOverheadChartStyle }),
+	        _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadData("dead"),
+	          chartOptions: fixedArrayOverheadOptions,
+	          chartStyle: fixedArrayOverheadChartStyle })
 	      )
 	    );
 	  }
@@ -21770,9 +21812,41 @@
 	  }
 	});
 
+	var BarChart = _react2.default.createClass({
+	  displayName: 'BarChart',
+
+	  getInitialState: function getInitialState() {
+	    return { chart: null };
+	  },
+	  _clearChartIfNecessary: function _clearChartIfNecessary() {
+	    if (this.state.chart != null) {
+	      this.state.chart.clearChart();
+	    }
+	  },
+	  update: function update(e) {
+	    this._clearChartIfNecessary();
+	    if (this.props.chartData == null) return;
+
+	    var chart = new google.visualization.BarChart(this.refs.chart);
+	    chart.draw(google.visualization.arrayToDataTable(this.props.chartData), this.props.chartOptions);
+	    this.state.chart = chart;
+	  },
+	  componentDidUpdate: function componentDidUpdate() {
+	    this.update();
+	  },
+	  render: function render() {
+	    return _react2.default.createElement(
+	      'div',
+	      null,
+	      _react2.default.createElement('div', { ref: 'chart', style: this.props.chartStyle })
+	    );
+	  }
+	});
+
 	module.exports = {
 	  AreaChart: AreaChart,
-	  PieChart: PieChart
+	  PieChart: PieChart,
+	  BarChart: BarChart
 	};
 
 /***/ }
