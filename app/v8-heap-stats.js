@@ -174,6 +174,8 @@ export default React.createClass({
   },
 
   instanceTypeSizeData: function(instance_type, key) {
+    if (instance_type == null) return null;
+
     let selected_gc_data = this.selectedGCData();
     if (selected_gc_data == null) return null;
 
@@ -199,6 +201,8 @@ export default React.createClass({
 
   handleSelection: function(a,b) {
     console.log("selected: " + a + ", " + b)
+
+    if (b === "Other") b = null;
 
     let selected = null;
     for (let gc in this.state.data.gcs) {
@@ -264,7 +268,7 @@ export default React.createClass({
             1: { color: '#DC3912' }
       },
     };
-    
+
     let instanceTypeSizeOptions = {
       bars: 'vertical',
       legend: {position: 'none'}
