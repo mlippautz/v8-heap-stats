@@ -121,6 +121,7 @@ export default React.createClass({
             data_set.non_empty_instance_types.add("*FIXED_ARRAY_UNKNOWN_SUB_TYPE");
           }
         }
+        console.log(data);
         this.handleDone(data, true, file.name);
       }.bind(this)
       result.readAsText(file);

@@ -82,9 +82,9 @@ var BarChart = React.createClass({
     this._clearChartIfNecessary();
     if (this.props.chartData == null) return;
 
-    var chart = new google.visualization.BarChart(this.refs.chart);
+    var chart = new google.charts.Bar(this.refs.chart);
     chart.draw(google.visualization.arrayToDataTable(this.props.chartData),
-               this.props.chartOptions);
+               google.charts.Bar.convertOptions(this.props.chartOptions));
     this.state.chart = chart;
   },
   componentDidUpdate: function() {

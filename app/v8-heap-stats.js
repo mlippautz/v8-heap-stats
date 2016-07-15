@@ -8,7 +8,8 @@ export default React.createClass({
     return {
       data: null,
       threshold: 0.01,
-      selected: null
+      selected: null,
+      selected_instance_type: null,
     };
   },
   handleNewData: function(data) {
@@ -37,7 +38,6 @@ export default React.createClass({
       }
       gc_count++;
     }
-    console.log(dataset);
     return [labels, ...dataset];
   },
 
@@ -123,6 +123,11 @@ export default React.createClass({
     return this.state.data.gcs[this.state.selected];
   },
 
+  selectedInstanceType: function() {
+    if (this.state.selected_instance_type == null) return null;
+    return this.state.selected_instance_type;
+  },
+
   instanceTypeData: function(key) {
     let ds = this._rawData(
       key,
@@ -143,21 +148,35 @@ export default React.createClass({
 
 
   fixedArrayOverheadData: function(key) {
-    let ds = this._rawData(
+    return this._rawData(
       key,
       ['Payload [Bytes]', 'Overhead [Bytes]'],
       (entry) => entry.startsWith("*FIXED_ARRAY_"),
       (entry) => entry == undefined ? [0,0] : [entry.overall, entry.over_allocated]
       );
-    console.log(ds);
-    return ds;
+  },
+
+  instanceTypeSizeData: function(instance_type, key) {
+    let selected_gc_data = this.selectedGCData();
+    if (selected_gc_data == null) return null;
+
+    let bucket_labels = selected_gc_data[key].bucket_sizes;
+    let bucket_sizes = selected_gc_data[key].instance_type_data[instance_type].overall_histogram;
+
+    let labels = ['Bucket', 'Count'];
+    let data = [];
+    for (let i = 0; i < bucket_sizes.length; i++) {
+      data.push(['<' + bucket_labels[i], bucket_sizes[i]]);
+    }
+    return [labels, ...data];
   },
 
   handleThresholdChange: function(e) {
     this.setState({
       data: this.state.data,
       threshold: e.target.value,
-      selected: this.state.selected
+      selected: this.state.selected,
+      selected_instance_type: this.state.selected_instance_type
     });
   },
 
@@ -175,7 +194,8 @@ export default React.createClass({
     this.setState({
       data: this.state.data,
       threshold: this.state.threshold,
-      selected: selected
+      selected: selected,
+      selected_instance_type: b
     });
   },
 
@@ -213,7 +233,24 @@ export default React.createClass({
           fontSize: 10
         }
       },
-      isStacked: true
+      isStacked: true,
+      bars: 'horizontal',
+      series: {
+            0: { color: '#3366CC' },
+            1: { color: '#DC3912' }
+      },
+    };
+    let instanceTypeSizeOptions = {
+      bars: 'vertical'
+    };
+    let instanceTypeSizeChartStyle = {
+      width: "50%",
+      height: "300px",
+      float: "left",
+    };
+    let instanceTypeSizeStyle = {
+      width: "100%",
+      height: "300px"
     };
     return (
       <div >
@@ -254,6 +291,16 @@ export default React.createClass({
           <BarChart chartData={this.fixedArrayOverheadData("dead")}
                     chartOptions={fixedArrayOverheadOptions}
                     chartStyle={fixedArrayOverheadChartStyle} />
+        </div>
+        <h2>InstanceType Size Histogram</h2>
+          <p>Selected InstanceType: {this.selectedInstanceType()}</p>
+          <div ref="instance_type_size_distribution" style={instanceTypeSizeStyle}>
+          <BarChart chartData={this.instanceTypeSizeData(this.selectedInstanceType(), "live")}
+                    chartOptions={instanceTypeSizeOptions}
+                    chartStyle={instanceTypeSizeChartStyle} />
+          <BarChart chartData={this.instanceTypeSizeData(this.selectedInstanceType(), "dead")}
+                    chartOptions={instanceTypeSizeOptions}
+                    chartStyle={instanceTypeSizeChartStyle} />
         </div>
       </div>
     );
