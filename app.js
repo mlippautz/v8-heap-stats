@@ -21283,7 +21283,7 @@
 	    return [labels].concat(dataset);
 	  },
 
-	  _rawData: function _rawData(key, header, selector, callback) {
+	  _rawData: function _rawData(key, header, selector, name_callback, value_callback) {
 	    var data = this.selectedGCData();
 	    if (data == null) return null;
 
@@ -21297,7 +21297,7 @@
 	        var entry = _step4.value;
 
 	        if (selector(entry)) {
-	          dataset.push([entry].concat(_toConsumableArray(callback(data[key].instance_type_data[entry]))));
+	          dataset.push([name_callback(entry)].concat(_toConsumableArray(value_callback(data[key].instance_type_data[entry]))));
 	        }
 	      }
 	    } catch (err) {
@@ -21330,29 +21330,49 @@
 	    return this.state.selected_instance_type;
 	  },
 
+	  fixedArraySubTypeName: function fixedArraySubTypeName(full_name) {
+	    return full_name.slice("*FIXED_ARRAY_".length).slice(0, -"_SUB_TYPE".length);
+	  },
+
+	  typeName: function typeName(full_name) {
+	    return full_name.slice(0, -"_TYPE".length);
+	  },
+
 	  instanceTypeData: function instanceTypeData(key) {
-	    var ds = this._rawData(key, ['Memory consumption [Bytes]'], function (entry) {
-	      return !entry.startsWith("*");
-	    }, function (entry) {
-	      return entry == undefined ? 0 : [entry.overall];
+	    var _this = this;
+
+	    var ds = this._rawData(key, ['Memory consumption [Bytes]'], function (name) {
+	      return !name.startsWith("*");
+	    }, function (name) {
+	      return _this.typeName(name);
+	    }, function (value) {
+	      return value == undefined ? 0 : [value.overall];
 	    });
 	    return ds;
 	  },
 
 	  fixedArrayData: function fixedArrayData(key) {
-	    var ds = this._rawData(key, ['Memory consumption [Bytes]'], function (entry) {
-	      return entry.startsWith("*FIXED_ARRAY_");
-	    }, function (entry) {
-	      return entry == undefined ? 0 : [entry.overall];
+	    var _this2 = this;
+
+	    var ds = this._rawData(key, ['Memory consumption [Bytes]'], function (name) {
+	      return name.startsWith("*FIXED_ARRAY_");
+	    }, function (name) {
+	      return _this2.fixedArraySubTypeName(name);
+	    }, function (value) {
+	      return value == undefined ? 0 : [value.overall];
 	    });
 	    return ds;
 	  },
 
 	  fixedArrayOverheadData: function fixedArrayOverheadData(key) {
-	    return this._rawData(key, ['Payload [Bytes]', 'Overhead [Bytes]'], function (entry) {
-	      return entry.startsWith("*FIXED_ARRAY_");
-	    }, function (entry) {
-	      return entry == undefined ? [0, 0] : [entry.overall - entry.over_allocated, entry.over_allocated];
+	    var _this3 = this;
+
+	    return this._rawData(key, ['Payload [Bytes]', 'Overhead [Bytes]'], function (name) {
+	      return name.startsWith("*FIXED_ARRAY_");
+	    }, function (name) {
+	      return _this3.fixedArraySubTypeName(name);
+	    }, function (value) {
+	      return value == undefined ? [0, 0] : [value.overall - value.over_allocated, value.over_allocated];
 	    });
 	  },
 
