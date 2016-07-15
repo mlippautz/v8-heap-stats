@@ -21125,7 +21125,8 @@
 	    return {
 	      data: null,
 	      threshold: 0.01,
-	      selected: null
+	      selected: null,
+	      selected_instance_type: null
 	    };
 	  },
 	  handleNewData: function handleNewData(data) {
@@ -21176,7 +21177,6 @@
 
 	      gc_count++;
 	    }
-	    console.log(dataset);
 	    return [labels].concat(dataset);
 	  },
 
@@ -21325,6 +21325,11 @@
 	    return this.state.data.gcs[this.state.selected];
 	  },
 
+	  selectedInstanceType: function selectedInstanceType() {
+	    if (this.state.selected_instance_type == null) return null;
+	    return this.state.selected_instance_type;
+	  },
+
 	  instanceTypeData: function instanceTypeData(key) {
 	    var ds = this._rawData(key, ['Memory consumption [Bytes]'], function (entry) {
 	      return !entry.startsWith("*");
@@ -21344,20 +21349,34 @@
 	  },
 
 	  fixedArrayOverheadData: function fixedArrayOverheadData(key) {
-	    var ds = this._rawData(key, ['Payload [Bytes]', 'Overhead [Bytes]'], function (entry) {
+	    return this._rawData(key, ['Payload [Bytes]', 'Overhead [Bytes]'], function (entry) {
 	      return entry.startsWith("*FIXED_ARRAY_");
 	    }, function (entry) {
 	      return entry == undefined ? [0, 0] : [entry.overall, entry.over_allocated];
 	    });
-	    console.log(ds);
-	    return ds;
+	  },
+
+	  instanceTypeSizeData: function instanceTypeSizeData(instance_type, key) {
+	    var selected_gc_data = this.selectedGCData();
+	    if (selected_gc_data == null) return null;
+
+	    var bucket_labels = selected_gc_data[key].bucket_sizes;
+	    var bucket_sizes = selected_gc_data[key].instance_type_data[instance_type].overall_histogram;
+
+	    var labels = ['Bucket', 'Count'];
+	    var data = [];
+	    for (var i = 0; i < bucket_sizes.length; i++) {
+	      data.push(['<' + bucket_labels[i], bucket_sizes[i]]);
+	    }
+	    return [labels].concat(data);
 	  },
 
 	  handleThresholdChange: function handleThresholdChange(e) {
 	    this.setState({
 	      data: this.state.data,
 	      threshold: e.target.value,
-	      selected: this.state.selected
+	      selected: this.state.selected,
+	      selected_instance_type: this.state.selected_instance_type
 	    });
 	  },
 
@@ -21375,7 +21394,8 @@
 	    this.setState({
 	      data: this.state.data,
 	      threshold: this.state.threshold,
-	      selected: selected
+	      selected: selected,
+	      selected_instance_type: b
 	    });
 	  },
 
@@ -21413,7 +21433,24 @@
 	          fontSize: 10
 	        }
 	      },
-	      isStacked: true
+	      isStacked: true,
+	      bars: 'horizontal',
+	      series: {
+	        0: { color: '#3366CC' },
+	        1: { color: '#DC3912' }
+	      }
+	    };
+	    var instanceTypeSizeOptions = {
+	      bars: 'vertical'
+	    };
+	    var instanceTypeSizeChartStyle = {
+	      width: "50%",
+	      height: "300px",
+	      float: "left"
+	    };
+	    var instanceTypeSizeStyle = {
+	      width: "100%",
+	      height: "300px"
 	    };
 	    return _react2.default.createElement(
 	      "div",
@@ -21490,6 +21527,27 @@
 	        _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadData("dead"),
 	          chartOptions: fixedArrayOverheadOptions,
 	          chartStyle: fixedArrayOverheadChartStyle })
+	      ),
+	      _react2.default.createElement(
+	        "h2",
+	        null,
+	        "InstanceType Size Histogram"
+	      ),
+	      _react2.default.createElement(
+	        "p",
+	        null,
+	        "Selected InstanceType: ",
+	        this.selectedInstanceType()
+	      ),
+	      _react2.default.createElement(
+	        "div",
+	        { ref: "instance_type_size_distribution", style: instanceTypeSizeStyle },
+	        _react2.default.createElement(_basicCharts.BarChart, { chartData: this.instanceTypeSizeData(this.selectedInstanceType(), "live"),
+	          chartOptions: instanceTypeSizeOptions,
+	          chartStyle: instanceTypeSizeChartStyle }),
+	        _react2.default.createElement(_basicCharts.BarChart, { chartData: this.instanceTypeSizeData(this.selectedInstanceType(), "dead"),
+	          chartOptions: instanceTypeSizeOptions,
+	          chartStyle: instanceTypeSizeChartStyle })
 	      )
 	    );
 	  }
@@ -21683,6 +21741,7 @@
 	            }
 	          }
 	        }
+	        console.log(data);
 	        this.handleDone(data, true, file.name);
 	      }.bind(this);
 	      result.readAsText(file);
@@ -21827,8 +21886,8 @@
 	    this._clearChartIfNecessary();
 	    if (this.props.chartData == null) return;
 
-	    var chart = new google.visualization.BarChart(this.refs.chart);
-	    chart.draw(google.visualization.arrayToDataTable(this.props.chartData), this.props.chartOptions);
+	    var chart = new google.charts.Bar(this.refs.chart);
+	    chart.draw(google.visualization.arrayToDataTable(this.props.chartData), google.charts.Bar.convertOptions(this.props.chartOptions));
 	    this.state.chart = chart;
 	  },
 	  componentDidUpdate: function componentDidUpdate() {
