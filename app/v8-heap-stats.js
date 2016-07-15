@@ -3,6 +3,9 @@ import React from "react";
 import TraceFileReader from "./trace-file-reader"
 import {AreaChart, BarChart, PieChart} from "./basic-charts"
 
+let KB = 1024;
+let MB = 1024 * KB;
+
 export default React.createClass({
   getInitialState: function() {
     return {
@@ -63,7 +66,7 @@ export default React.createClass({
           if (instance_type.startsWith("*")) continue;
           var instance_type_data = per_gc_data[gc]["live"].instance_type_data;
           if ((instance_type in instance_type_data) && 
-              (instance_type_data[instance_type].overall > (per_gc_data[gc]["live"].overall * threshold))) {
+              (instance_type_data[instance_type].overall > (per_gc_data[gc]["live"].overall* threshold))) {
             interesting_instance_types_array.push(instance_type);
             interesting_instance_types.add(instance_type);
           }
@@ -84,7 +87,7 @@ export default React.createClass({
         if (gc_count == 0) labels.push(instance_type);
         var instance_type_data = per_gc_data[gc]["live"].instance_type_data;
         if (instance_type in instance_type_data) {
-          dataset[gc_count].push(instance_type_data[instance_type].overall);
+          dataset[gc_count].push(instance_type_data[instance_type].overall / KB);
         } else {
           dataset[gc_count].push(0);
         }
@@ -93,7 +96,7 @@ export default React.createClass({
       for (let instance_type of non_interesting_instance_types) {
         var instance_type_data = per_gc_data[gc]["live"].instance_type_data;
         if (instance_type in instance_type_data) {
-          other += instance_type_data[instance_type].overall;
+          other += instance_type_data[instance_type].overall/KB;
         }
       }
       dataset[gc_count].push(other);
@@ -135,6 +138,7 @@ export default React.createClass({
   },
 
   typeName: function(full_name) {
+    if (full_name == null) return null;
     return full_name.slice(0, -("_TYPE".length));
   },
 
@@ -214,13 +218,20 @@ export default React.createClass({
 
   render: function() {
     let timelineStyle = {
-      width: "100%",
-      height: "600px"
+      width: "90%",
+      height: "600px",
+      margin: 'auto',
     };
     let timelineOptions = {
       isStacked: true,
       pointsVisible: true,
       pointSize: 3,
+      hAxis: {
+        title :"Time [ms]"
+      },
+      vAxis :{
+        title: "Memory consumption [KBytes]"
+      }
     };
     let instanceTypeDistributionStyle = {
       height: "600px",
@@ -253,31 +264,61 @@ export default React.createClass({
             1: { color: '#DC3912' }
       },
     };
+    
     let instanceTypeSizeOptions = {
-      bars: 'vertical'
+      bars: 'vertical',
+      legend: {position: 'none'}
     };
-    let instanceTypeSizeChartStyle = {
-      width: "50%",
-      height: "300px",
-      float: "left",
-    };
-    let instanceTypeSizeStyle = {
-      width: "100%",
-      height: "300px"
-    };
+    let instanceTypeSizeHeight = "300px";
+
     return (
       <div >
         <TraceFileReader onNewData={this.handleNewData} />
         <h1>V8 Heap Statistics</h1>
         <p>
-          Visualize object stats gathered using <tt>--trace-gc-object-stats</tt>.
+          Visualize object stats gathered using <tt>--trace-gc-object-stats</tt>. 
         </p>
+
+        <div style={{display: this.state.data == null ? "none" : "inline"}}>
         <h2>Timeline</h2>
-        Threshold for single InstanceType <input ref="threshold" type="text" value={this.state.threshold} onChange={this.handleThresholdChange} />
+        <p>
+          The plot shows the memory consumption for each instance type over time. Each data point corresponds to a sample
+          collected during a major GC. Lines stack, i.e., the top line shows the overall memory consumption.
+          Select a data point to inspect details.
+        </p>
+        <p>
+          Threshold for single InstanceType: <input ref="threshold" type="text" value={this.state.threshold} onChange={this.handleThresholdChange} />.
+          The threshold determines which values to fold into the 'Other' category.
+        </p>
         <AreaChart chartData={this.timelineDataGrouped()}
                    chartStyle={timelineStyle}
                    chartOptions={timelineOptions}
                    handleSelection={this.handleSelection} />
+        </div>
+
+        <div style={{display: this.selectedInstanceType() == null ? "none" : "inline"}}>
+          <h2><tt>{this.typeName(this.selectedInstanceType())}</tt> Size Histogram</h2>
+          <p>
+            Plot shows the size histogram for the selected instance type.
+          </p>
+          <div ref="instance_type_size_distribution" style={null}>
+            <div style={{width: '50%', float:'left'}}>
+              <h3 style={{textAlign: 'center'}}>Live</h3>
+              <BarChart chartData={this.instanceTypeSizeData(this.selectedInstanceType(), "live")}
+                        chartOptions={instanceTypeSizeOptions}
+                        chartStyle={{height: instanceTypeSizeHeight, margin: '30px'}} />
+            </div>
+            <div style={{width: '50%', float:'left'}}>
+              <h3 style={{textAlign: 'center'}}>Dead</h3>
+              <BarChart chartData={this.instanceTypeSizeData(this.selectedInstanceType(), "dead")}
+                        chartOptions={instanceTypeSizeOptions}
+                        chartStyle={{height: instanceTypeSizeHeight, margin: '30px'}} />
+            </div>
+          </div>
+        </div>
+
+
+        <div style={{display: this.selectedGCData() == null ? "none" : "inline"}}>
         <h2>InstanceType Distribution</h2>
         <div ref="instance_type_distribution" style={instanceTypeDistributionStyle}>
           <PieChart chartData={this.instanceTypeData("live")}
@@ -305,16 +346,9 @@ export default React.createClass({
                     chartOptions={fixedArrayOverheadOptions}
                     chartStyle={fixedArrayOverheadChartStyle} />
         </div>
-        <h2>InstanceType Size Histogram</h2>
-          <p>Selected InstanceType: {this.selectedInstanceType()}</p>
-          <div ref="instance_type_size_distribution" style={instanceTypeSizeStyle}>
-          <BarChart chartData={this.instanceTypeSizeData(this.selectedInstanceType(), "live")}
-                    chartOptions={instanceTypeSizeOptions}
-                    chartStyle={instanceTypeSizeChartStyle} />
-          <BarChart chartData={this.instanceTypeSizeData(this.selectedInstanceType(), "dead")}
-                    chartOptions={instanceTypeSizeOptions}
-                    chartStyle={instanceTypeSizeChartStyle} />
         </div>
+
+
       </div>
     );
   },
