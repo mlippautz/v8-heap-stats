@@ -103,14 +103,15 @@ export default React.createClass({
     return [labels, ...dataset];
   },
 
-  _rawData: function(key, header, selector, callback) {
+  _rawData: function(key, header, selector, name_callback, value_callback) {
     let data = this.selectedGCData();
     if (data == null) return null;
 
     let dataset = [['InstanceType', ...header]];
     for (let entry of data[key].non_empty_instance_types) {
       if (selector(entry)) {
-        dataset.push([entry, ...callback(data[key].instance_type_data[entry])]);
+        dataset.push([name_callback(entry),
+                      ...value_callback(data[key].instance_type_data[entry])]);
       }
     }
     return dataset;
@@ -128,12 +129,22 @@ export default React.createClass({
     return this.state.selected_instance_type;
   },
 
+
+  fixedArraySubTypeName: function(full_name) {
+    return full_name.slice("*FIXED_ARRAY_".length).slice(0, -("_SUB_TYPE".length));
+  },
+
+  typeName: function(full_name) {
+    return full_name.slice(0, -("_TYPE".length));
+  },
+
   instanceTypeData: function(key) {
     let ds = this._rawData(
       key,
       ['Memory consumption [Bytes]'],
-      (entry) => !entry.startsWith("*"),
-      (entry) => entry == undefined ? 0 : [entry.overall]);
+      (name) => !name.startsWith("*"),
+      (name) => this.typeName(name),
+      (value) => value == undefined ? 0 : [value.overall]);
     return ds;
   },
 
@@ -141,8 +152,9 @@ export default React.createClass({
     let ds = this._rawData(
       key,
       ['Memory consumption [Bytes]'],
-      (entry) => entry.startsWith("*FIXED_ARRAY_"),
-      (entry) => entry == undefined ? 0 : [entry.overall]);
+      (name) => name.startsWith("*FIXED_ARRAY_"),
+      (name) => this.fixedArraySubTypeName(name),
+      (value) => value == undefined ? 0 : [value.overall]);
     return ds;
   },
 
@@ -151,8 +163,9 @@ export default React.createClass({
     return this._rawData(
       key,
       ['Payload [Bytes]', 'Overhead [Bytes]'],
-      (entry) => entry.startsWith("*FIXED_ARRAY_"),
-      (entry) => entry == undefined ? [0,0] : [entry.overall - entry.over_allocated, entry.over_allocated]
+      (name) => name.startsWith("*FIXED_ARRAY_"),
+      (name) => this.fixedArraySubTypeName(name),
+      (value) => value == undefined ? [0,0] : [value.overall - value.over_allocated, value.over_allocated]
       );
   },
 
