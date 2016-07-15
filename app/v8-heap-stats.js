@@ -152,7 +152,7 @@ export default React.createClass({
       key,
       ['Payload [Bytes]', 'Overhead [Bytes]'],
       (entry) => entry.startsWith("*FIXED_ARRAY_"),
-      (entry) => entry == undefined ? [0,0] : [entry.overall, entry.over_allocated]
+      (entry) => entry == undefined ? [0,0] : [entry.overall - entry.over_allocated, entry.over_allocated]
       );
   },
 
