@@ -21129,9 +21129,9 @@
 	      data: null,
 	      threshold: 0.01,
 
-	      selected_isolate: null,
-	      selected_gc: null,
-	      selected_instance_type: null
+	      selectedIsolate: null,
+	      selectedGC: null,
+	      selectedInstanceType: null
 	    };
 	  },
 
@@ -21146,9 +21146,9 @@
 	      data: data,
 	      threshold: this.state.threshold,
 
-	      selected_isolate: first_isolate,
-	      selected_gc: null,
-	      selected_instance_type: null
+	      selectedIsolate: first_isolate,
+	      selectedGC: null,
+	      selectedInstanceType: null
 	    });
 	  },
 
@@ -21158,20 +21158,20 @@
 	      data: this.state.data,
 	      threshold: this.state.threshold,
 
-	      selected_isolate: e.target.value,
-	      selected_gc: null,
-	      selected_instance_type: null
+	      selectedIsolate: e.target.value,
+	      selectedGC: null,
+	      selectedInstanceType: null
 	    });
 	  },
 
 	  selectedIsolateData: function selectedIsolateData() {
-	    if (this.state.data == null) return null;
-	    return this.state.data[this.state.selected_isolate];
+	    if (this.state.data === null) return null;
+	    return this.state.data[this.state.selectedIsolate];
 	  },
 
 	  timelineData: function timelineData() {
 	    var isolate_data = this.selectedIsolateData();
-	    if (isolate_data == null) return null;
+	    if (isolate_data === null) return null;
 	    var per_gc_data = isolate_data.gcs;
 	    var dataset = [];
 	    var labels = ['Time [ms]'];
@@ -21188,9 +21188,9 @@
 
 	          if (instance_type.startsWith("*")) continue;
 
-	          if (gc_count == 0) labels.push(instance_type);
+	          if (gc_count === 0) labels.push(instance_type);
 
-	          var instance_type_data = per_gc_data[gc]["live"].instance_type_data;
+	          var instance_type_data = per_gc_data[gc].live.instance_type_data;
 	          if (instance_type in instance_type_data) {
 	            dataset[gc_count].push(instance_type_data[instance_type].overall);
 	          } else {
@@ -21219,11 +21219,11 @@
 
 	  timelineDataGrouped: function timelineDataGrouped() {
 	    var isolate_data = this.selectedIsolateData();
-	    if (isolate_data == null) return null;
+	    if (isolate_data === null) return null;
 	    var per_gc_data = isolate_data.gcs;
 	    var dataset = [];
 	    var labels = ['Time [ms]'];
-	    var gc_count = 0;
+	    var gcCount = 0;
 
 	    var threshold = parseFloat(this.state.threshold);
 	    if (isNaN(threshold)) threshold = 0;
@@ -21232,13 +21232,12 @@
 	    var interesting_instance_types = new Set();
 	    var non_interesting_instance_types = new Set();
 	    for (var gc in per_gc_data) {
-
-	      if (gc_count == 0) {
-	        for (var key in per_gc_data[gc]["live"].ranked_instance_types) {
-	          var instance_type = per_gc_data[gc]["live"].ranked_instance_types[key];
+	      if (gcCount === 0) {
+	        for (var key in per_gc_data[gc].live.ranked_instance_types) {
+	          var instance_type = per_gc_data[gc].live.ranked_instance_types[key];
 	          if (instance_type.startsWith("*")) continue;
-	          var instance_type_data = per_gc_data[gc]["live"].instance_type_data;
-	          if (instance_type in instance_type_data && instance_type_data[instance_type].overall > per_gc_data[gc]["live"].overall * threshold) {
+	          var instance_type_data = per_gc_data[gc].live.instance_type_data;
+	          if (instance_type in instance_type_data && instance_type_data[instance_type].overall > per_gc_data[gc].live.overall * threshold) {
 	            interesting_instance_types_array.push(instance_type);
 	            interesting_instance_types.add(instance_type);
 	          }
@@ -21274,15 +21273,15 @@
 	      }
 
 	      var other = 0;
-	      dataset[gc_count] = [per_gc_data[gc].time];
+	      dataset[gcCount] = [per_gc_data[gc].time];
 	      for (var _key in interesting_instance_types_array) {
 	        var _instance_type2 = interesting_instance_types_array[_key];
-	        if (gc_count == 0) labels.push(_instance_type2);
-	        var instance_type_data = per_gc_data[gc]["live"].instance_type_data;
+	        if (gcCount === 0) labels.push(_instance_type2);
+	        var instance_type_data = per_gc_data[gc].live.instance_type_data;
 	        if (_instance_type2 in instance_type_data) {
-	          dataset[gc_count].push(instance_type_data[_instance_type2].overall / KB);
+	          dataset[gcCount].push(instance_type_data[_instance_type2].overall / KB);
 	        } else {
-	          dataset[gc_count].push(0);
+	          dataset[gcCount].push(0);
 	        }
 	      }
 
@@ -21294,7 +21293,7 @@
 	        for (var _iterator3 = non_interesting_instance_types[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
 	          var _instance_type3 = _step3.value;
 
-	          var instance_type_data = per_gc_data[gc]["live"].instance_type_data;
+	          var instance_type_data = per_gc_data[gc].live.instance_type_data;
 	          if (_instance_type3 in instance_type_data) {
 	            other += instance_type_data[_instance_type3].overall / KB;
 	          }
@@ -21314,16 +21313,16 @@
 	        }
 	      }
 
-	      dataset[gc_count].push(other);
-	      if (gc_count == 0) labels.push('Other');
-	      gc_count++;
+	      dataset[gcCount].push(other);
+	      if (gcCount === 0) labels.push('Other');
+	      gcCount++;
 	    }
 	    return [labels].concat(dataset);
 	  },
 
 	  _rawData: function _rawData(key, header, selector, name_callback, value_callback) {
-	    var gc_data = this.selectedGCData();
-	    if (gc_data == null) return null;
+	    var gcData = this.selectedGCData();
+	    if (gcData === null) return null;
 
 	    var dataset = [['InstanceType'].concat(_toConsumableArray(header))];
 	    var _iteratorNormalCompletion4 = true;
@@ -21331,11 +21330,11 @@
 	    var _iteratorError4 = undefined;
 
 	    try {
-	      for (var _iterator4 = gc_data[key].non_empty_instance_types[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+	      for (var _iterator4 = gcData[key].non_empty_instance_types[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
 	        var entry = _step4.value;
 
 	        if (selector(entry)) {
-	          dataset.push([name_callback(entry)].concat(_toConsumableArray(value_callback(gc_data[key].instance_type_data[entry]))));
+	          dataset.push([name_callback(entry)].concat(_toConsumableArray(value_callback(gcData[key].instance_type_data[entry]))));
 	        }
 	      }
 	    } catch (err) {
@@ -21357,26 +21356,25 @@
 	  },
 
 	  selectedGCData: function selectedGCData() {
-	    var isolate_data = this.selectedIsolateData();
-	    if (isolate_data == null) return null;
-	    if (this.state.selected == null) return null;
-
-	    var selected_gc_data = isolate_data.gcs[this.state.selected];
-	    return selected_gc_data;
+	    var isolateData = this.selectedIsolateData();
+	    if (isolateData === null) return null;
+	    if (this.state.selectedGC === null) return null;
+	    return isolateData.gcs[this.state.selectedGC];
 	  },
 
 	  selectedInstanceType: function selectedInstanceType() {
-	    if (this.state.selected_instance_type == null) return null;
-	    return this.state.selected_instance_type;
+	    if (this.state.selectedInstanceType === null) return null;
+	    return this.state.selectedInstanceType;
 	  },
 
-	  fixedArraySubTypeName: function fixedArraySubTypeName(full_name) {
-	    return full_name.slice("*FIXED_ARRAY_".length).slice(0, -"_SUB_TYPE".length);
+	  fixedArraySubTypeName: function fixedArraySubTypeName(fullName) {
+	    if (fullName === null) return null;
+	    return fullName.slice("*FIXED_ARRAY_".length).slice(0, -"_SUB_TYPE".length);
 	  },
 
-	  typeName: function typeName(full_name) {
-	    if (full_name == null) return null;
-	    return full_name.slice(0, -"_TYPE".length);
+	  typeName: function typeName(fullName) {
+	    if (fullName === null) return null;
+	    return fullName.slice(0, -"_TYPE".length);
 	  },
 
 	  instanceTypeData: function instanceTypeData(key) {
@@ -21387,7 +21385,7 @@
 	    }, function (name) {
 	      return _this.typeName(name);
 	    }, function (value) {
-	      return value == undefined ? 0 : [value.overall];
+	      return value === undefined ? 0 : [value.overall];
 	    });
 	    return ds;
 	  },
@@ -21400,7 +21398,7 @@
 	    }, function (name) {
 	      return _this2.fixedArraySubTypeName(name);
 	    }, function (value) {
-	      return value == undefined ? 0 : [value.overall];
+	      return value === undefined ? 0 : [value.overall];
 	    });
 	    return ds;
 	  },
@@ -21413,23 +21411,21 @@
 	    }, function (name) {
 	      return _this3.fixedArraySubTypeName(name);
 	    }, function (value) {
-	      return value == undefined ? [0, 0] : [value.overall - value.over_allocated, value.over_allocated];
+	      return value === undefined ? [0, 0] : [value.overall - value.over_allocated, value.over_allocated];
 	    });
 	  },
 
 	  instanceTypeSizeData: function instanceTypeSizeData(instance_type, key) {
-	    if (instance_type == null) return null;
+	    if (instance_type === null) return null;
+	    var selectedGCData = this.selectedGCData();
+	    if (selectedGCData === null) return null;
 
-	    var selected_gc_data = this.selectedGCData();
-	    if (selected_gc_data == null) return null;
-
-	    var bucket_labels = selected_gc_data[key].bucket_sizes;
-	    var bucket_sizes = selected_gc_data[key].instance_type_data[instance_type].overall_histogram;
-
+	    var bucketLabels = selectedGCData[key].bucket_sizes;
+	    var bucketSizes = selectedGCData[key].instance_type_data[instance_type].overall_histogram;
 	    var labels = ['Bucket', 'Count'];
 	    var data = [];
-	    for (var i = 0; i < bucket_sizes.length; i++) {
-	      data.push(['<' + bucket_labels[i], bucket_sizes[i]]);
+	    for (var i = 0; i < bucketSizes.length; i++) {
+	      data.push(['<' + bucketLabels[i], bucketSizes[i]]);
 	    }
 	    return [labels].concat(data);
 	  },
@@ -21438,8 +21434,8 @@
 	    this.setState({
 	      data: this.state.data,
 	      threshold: e.target.value,
-	      selected: this.state.selected,
-	      selected_instance_type: this.state.selected_instance_type
+	      selectedGC: this.state.selectedGC,
+	      selectedInstanceType: this.state.selectedInstanceType
 	    });
 	  },
 
@@ -21450,7 +21446,7 @@
 
 	    var selected = null;
 	    for (var gc in this.selectedIsolateData().gcs) {
-	      if (this.selectedIsolateData().gcs[gc].time == a) {
+	      if (this.selectedIsolateData().gcs[gc].time === a) {
 	        selected = gc;
 	        break;
 	      }
@@ -21459,9 +21455,9 @@
 	    this.setState({
 	      data: this.state.data,
 	      threshold: this.state.threshold,
-	      selected: selected,
-	      selected_instance_type: b,
-	      selected_isolate: this.state.selected_isolate
+	      selectedGC: selected,
+	      selectedInstanceType: b,
+	      selectedIsolate: this.state.selectedIsolate
 	    });
 	  },
 
@@ -21475,12 +21471,8 @@
 	      isStacked: true,
 	      pointsVisible: true,
 	      pointSize: 3,
-	      hAxis: {
-	        title: "Time [ms]"
-	      },
-	      vAxis: {
-	        title: "Memory consumption [KBytes]"
-	      }
+	      hAxis: { title: "Time [ms]" },
+	      vAxis: { title: "Memory consumption [KBytes]" }
 	    };
 	    var instanceTypeDistributionStyle = {
 	      height: "600px",
@@ -21502,9 +21494,7 @@
 	    };
 	    var fixedArrayOverheadOptions = {
 	      vAxis: {
-	        textStyle: {
-	          fontSize: 10
-	        }
+	        textStyle: { fontSize: 10 }
 	      },
 	      isStacked: true,
 	      bars: 'horizontal',
@@ -21520,7 +21510,7 @@
 	    };
 	    var instanceTypeSizeHeight = "300px";
 
-	    var isolateOptions = this.state.data == null ? _react2.default.createElement(
+	    var isolateOptions = this.state.data === null ? _react2.default.createElement(
 	      "option",
 	      null,
 	      "Load some data first..."
@@ -21559,7 +21549,7 @@
 	        _react2.default.createElement(
 	          "select",
 	          {
-	            disabled: this.state.data == null ? "disabled" : "",
+	            disabled: this.state.data === null ? "disabled" : "",
 	            style: { marginLeft: "10px", verticalAlign: "middle" },
 	            onChange: this.handleIsolateChange },
 	          isolateOptions
@@ -21567,7 +21557,7 @@
 	      ),
 	      _react2.default.createElement(
 	        "div",
-	        { style: { display: this.state.data == null ? "none" : "inline" } },
+	        { style: { display: this.state.data === null ? "none" : "inline" } },
 	        _react2.default.createElement(
 	          "h2",
 	          null,
@@ -21592,7 +21582,7 @@
 	      ),
 	      _react2.default.createElement(
 	        "div",
-	        { style: { display: this.selectedInstanceType() == null ? "none" : "inline" } },
+	        { style: { display: this.selectedInstanceType() === null ? "none" : "inline" } },
 	        _react2.default.createElement(
 	          "h2",
 	          null,
@@ -21639,7 +21629,7 @@
 	      ),
 	      _react2.default.createElement(
 	        "div",
-	        { style: { display: this.selectedGCData() == null ? "none" : "inline" } },
+	        { style: { display: this.selectedGCData() === null ? "none" : "inline" } },
 	        _react2.default.createElement(
 	          "h2",
 	          null,
@@ -21713,9 +21703,10 @@
 
 	  getInitialState: function getInitialState() {
 	    return {
-	      inner_text: "Drag and drop a trace file into this area, or click to choose from disk."
+	      innerText: "Drag and drop a trace file into " + "this area, or click to choose from disk."
 	    };
 	  },
+
 	  readFile: function readFile(file) {
 	    if (file) {
 	      var result = new FileReader();
@@ -21755,8 +21746,8 @@
 	          for (var _iterator = contents[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 	            var entry = _step.value;
 
-	            if (entry == null) continue;
-	            if (entry.type == undefined) continue;
+	            if (entry === null) continue;
+	            if (entry.type === undefined) continue;
 
 	            if (entry.type === "gc_descriptor") {
 	              createEntryIfNeeded(entry);
@@ -21771,7 +21762,7 @@
 	                    overall: 0
 	                  };
 	                }
-	                if (entry.overall != 0) {
+	                if (entry.overall !== 0) {
 	                  var instance_type_name = entry.instance_type_name;
 	                  var id = entry.id;
 	                  var key = entry.key;
@@ -21780,11 +21771,11 @@
 	                  }
 	                  keys[entry.isolate].add(key);
 	                  data[entry.isolate].gcs[id][key].instance_type_data[instance_type_name] = {
-	                    "overall": entry.overall,
-	                    "count": entry.count,
-	                    "over_allocated": entry.over_allocated,
-	                    "overall_histogram": entry.histogram,
-	                    "over_allocated_histogram": entry.over_allocated_histogram
+	                    overall: entry.overall,
+	                    count: entry.count,
+	                    over_allocated: entry.over_allocated,
+	                    overall_histogram: entry.histogram,
+	                    over_allocated_histogram: entry.over_allocated_histogram
 	                  };
 	                  data[entry.isolate].gcs[id][key].overall += entry.overall;
 
@@ -21840,23 +21831,24 @@
 	              var _loop = function _loop() {
 	                var key = _step2.value;
 
-	                var data_set = data[isolate].gcs[gc][key];
-	                // (1) Create a ranked instance type array that sorts instance types by memory size (overall).
-	                // data_set.ranked_instance_types = ;
-	                data_set.ranked_instance_types = [].concat(_toConsumableArray(data_set.non_empty_instance_types)).sort(function (a, b) {
-	                  if (data_set.instance_type_data[a].overall > data_set.instance_type_data[b].overall) {
+	                var dataSet = data[isolate].gcs[gc][key];
+	                // (1) Create a ranked instance type array that sorts instance
+	                // types by memory size (overall).
+	                dataSet.ranked_instance_types = [].concat(_toConsumableArray(dataSet.non_empty_instance_types)).sort(function (a, b) {
+	                  if (dataSet.instance_type_data[a].overall > dataSet.instance_type_data[b].overall) {
 	                    return 1;
-	                  } else if (data_set.instance_type_data[a].overall < data_set.instance_type_data[b].overall) {
+	                  } else if (dataSet.instance_type_data[a].overall < dataSet.instance_type_data[b].overall) {
 	                    return -1;
 	                  }
 	                  return 0;
 	                });
 
-	                // (2) Create *FIXED_ARRAY_UNKNOWN_SUB_TYPE that account for all missing fixed array sub types.
-	                var fixed_array_data = Object.assign({}, data_set.instance_type_data.FIXED_ARRAY_TYPE);
-	                for (var instance_type in data_set.instance_type_data) {
+	                // (2) Create *FIXED_ARRAY_UNKNOWN_SUB_TYPE that accounts for all
+	                // missing fixed array sub types.
+	                var fixed_array_data = Object.assign({}, dataSet.instance_type_data.FIXED_ARRAY_TYPE);
+	                for (var instance_type in dataSet.instance_type_data) {
 	                  if (!instance_type.startsWith("*FIXED_ARRAY")) continue;
-	                  var subtype = data_set.instance_type_data[instance_type];
+	                  var subtype = dataSet.instance_type_data[instance_type];
 	                  fixed_array_data.count -= subtype.count;
 	                  fixed_array_data.overall -= subtype.overall;
 	                  for (var i = 0; i < fixed_array_data.overall_histogram.length; i++) {
@@ -21871,8 +21863,8 @@
 	                  checkNonNegativeProperty(fixed_array_data.overall_histogram, _i);
 	                }
 
-	                data_set.instance_type_data["*FIXED_ARRAY_UNKNOWN_SUB_TYPE"] = fixed_array_data;
-	                data_set.non_empty_instance_types.add("*FIXED_ARRAY_UNKNOWN_SUB_TYPE");
+	                dataSet.instance_type_data["*FIXED_ARRAY_UNKNOWN_SUB_TYPE"] = fixed_array_data;
+	                dataSet.non_empty_instance_types.add("*FIXED_ARRAY_UNKNOWN_SUB_TYPE");
 	              };
 
 	              for (var _iterator2 = keys[isolate][Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
@@ -21902,24 +21894,29 @@
 	      console.log("Failed to load file");
 	    }
 	  },
-	  handleDone: function handleDone(data, file_name) {
+
+	  handleDone: function handleDone(data, fileName) {
 	    this.setState({
-	      inner_text: "Finished loading '" + file_name + "'"
+	      innerText: "Finished loading '" + fileName + "'"
 	    });
 	    this.props.onNewData(data);
 	  },
+
 	  handleChange: function handleChange(event) {
 	    event.preventDefault();
 	    var host = event.dataTransfer ? event.dataTransfer : event.target;
 	    this.readFile(host.files[0]);
 	  },
+
 	  handleDragOver: function handleDragOver(event) {
 	    event.preventDefault();
 	  },
+
 	  handleClick: function handleClick(event) {
 	    this.refs.file.value = null;
 	    this.refs.file.click();
 	  },
+
 	  render: function render() {
 	    var dragDropStyle = {
 	      width: "100%",
@@ -21934,8 +21931,11 @@
 	    };
 	    return _react2.default.createElement(
 	      "div",
-	      { style: dragDropStyle, onDragOver: this.handleDragOver, onDrop: this.handleChange, onClick: this.handleClick },
-	      this.state.inner_text,
+	      { style: dragDropStyle,
+	        onDragOver: this.handleDragOver,
+	        onDrop: this.handleChange,
+	        onClick: this.handleClick },
+	      this.state.innerText,
 	      _react2.default.createElement("input", { ref: "file", type: "file", name: "file", onChange: this.handleChange, style: inputStyle })
 	    );
 	  }
@@ -21960,13 +21960,13 @@
 	    return { chart: null };
 	  },
 	  _clearChartIfNecessary: function _clearChartIfNecessary() {
-	    if (this.state.chart != null) {
+	    if (this.state.chart !== null) {
 	      this.state.chart.clearChart();
 	    }
 	  },
 	  update: function update(e) {
 	    this._clearChartIfNecessary();
-	    if (this.props.chartData == null) return;
+	    if (this.props.chartData === null) return;
 
 	    var data = google.visualization.arrayToDataTable(this.props.chartData);
 	    var chart = new google.visualization.AreaChart(this.refs.chart);
@@ -22000,13 +22000,13 @@
 	    return { chart: null };
 	  },
 	  _clearChartIfNecessary: function _clearChartIfNecessary() {
-	    if (this.state.chart != null) {
+	    if (this.state.chart !== null) {
 	      this.state.chart.clearChart();
 	    }
 	  },
 	  update: function update(e) {
 	    this._clearChartIfNecessary();
-	    if (this.props.chartData == null) return;
+	    if (this.props.chartData === null) return;
 
 	    var chart = new google.visualization.PieChart(this.refs.chart);
 	    chart.draw(google.visualization.arrayToDataTable(this.props.chartData), this.props.chartOptions);
@@ -22031,13 +22031,13 @@
 	    return { chart: null };
 	  },
 	  _clearChartIfNecessary: function _clearChartIfNecessary() {
-	    if (this.state.chart != null) {
+	    if (this.state.chart !== null) {
 	      this.state.chart.clearChart();
 	    }
 	  },
 	  update: function update(e) {
 	    this._clearChartIfNecessary();
-	    if (this.props.chartData == null) return;
+	    if (this.props.chartData === null) return;
 
 	    var chart = new google.charts.Bar(this.refs.chart);
 	    chart.draw(google.visualization.arrayToDataTable(this.props.chartData), google.charts.Bar.convertOptions(this.props.chartOptions));
