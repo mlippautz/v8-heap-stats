@@ -8,9 +8,9 @@ export default React.createClass({
   },
   readFile: function(file) {
     if (file) {
-      var result = new FileReader();
+      const result = new FileReader();
       result.onload = function(e) { 
-        var contents = e.target.result.split("\n");
+        let contents = e.target.result.split("\n");
         contents = contents.map(function (line) {
           try {
             return JSON.parse(line);
@@ -19,26 +19,36 @@ export default React.createClass({
           }
           return null;
         });
-        var data = {
-          non_empty_instance_types: new Set(),
-          gcs: {}
+
+        const data = {};  // Final data container.
+        const keys = {};  // Collecting 'keys' per isolate.
+
+        let createEntryIfNeeded = (entry) => {
+          if (!(entry.isolate in data)) {
+            data[entry.isolate] = {
+              non_empty_instance_types: new Set(),
+              gcs: {}
+            };
+          }
+          if (!(entry.id in data[entry.isolate].gcs)) {
+            data[entry.isolate].gcs[entry.id] = {
+              non_empty_instance_types: new Set()
+            }
+          }
         };
-        let keys = new Set();
+
         for (var entry of contents) {
           if (entry == null) continue;
           if (entry.type == undefined) continue;
 
           if (entry.type === "gc_descriptor") {
-            if (!(entry.id in data.gcs)) {
-              data.gcs[entry.id] = {
-                time: entry.time,
-                non_empty_instance_types: new Set()
-              };
-            }
+            createEntryIfNeeded(entry);
+            data[entry.isolate].gcs[entry.id].time = entry.time;
           } else if (entry.type === "instance_type_data") {
-            if (entry.id in data.gcs) {
-              if (!(entry.key in data.gcs[entry.id])) {
-                data.gcs[entry.id][entry.key] = {
+            if (entry.id in data[entry.isolate].gcs) {
+              createEntryIfNeeded(entry);
+              if (!(entry.key in data[entry.isolate].gcs[entry.id])) {
+                data[entry.isolate].gcs[entry.id][entry.key] = {
                   instance_type_data: {},
                   non_empty_instance_types: new Set(),
                   overall: 0
@@ -48,31 +58,35 @@ export default React.createClass({
                 var instance_type_name = entry.instance_type_name;
                 var id = entry.id;
                 var key = entry.key;
-                keys.add(key);
-                data.gcs[id][key].instance_type_data[instance_type_name] = {
+                if (!(entry.isolate in keys)) {
+                  keys[entry.isolate] = new Set();
+                }
+                keys[entry.isolate].add(key);
+                data[entry.isolate].gcs[id][key].instance_type_data[instance_type_name] = {
                   "overall": entry.overall,
                   "count": entry.count,
                   "over_allocated": entry.over_allocated,
                   "overall_histogram" : entry.histogram,
                   "over_allocated_histogram": entry.over_allocated_histogram
                 };
-                data.gcs[id][key].overall += entry.overall;
+                data[entry.isolate].gcs[id][key].overall += entry.overall;
 
-                data.gcs[id][key].non_empty_instance_types.add(instance_type_name);
-                data.gcs[id].non_empty_instance_types.add(instance_type_name);
-                data.non_empty_instance_types.add(instance_type_name);
+                data[entry.isolate].gcs[id][key].non_empty_instance_types.add(instance_type_name);
+                data[entry.isolate].gcs[id].non_empty_instance_types.add(instance_type_name);
+                data[entry.isolate].non_empty_instance_types.add(instance_type_name);
               }
             }
           } else if (entry.type === "bucket_sizes") {
-            if (entry.id in data.gcs) {
-              if (!(entry.key in data.gcs[entry.id])) {
-                data.gcs[entry.id][entry.key] = {
+            if (entry.id in data[entry.isolate].gcs) {
+              createEntryIfNeeded(entry);
+              if (!(entry.key in data[entry.isolate].gcs[entry.id])) {
+                data[entry.isolate].gcs[entry.id][entry.key] = {
                   instance_type_data: {},
                   non_empty_instance_types: new Set(),
                   overall: 0
                 };
               }
-              data.gcs[entry.id][entry.key].bucket_sizes = entry.sizes;
+              data[entry.isolate].gcs[entry.id][entry.key].bucket_sizes = entry.sizes;
             }
           } else {
             console.log("Unknown entry type: " + entry.type);
@@ -85,50 +99,55 @@ export default React.createClass({
           }
         }
 
-        for (let gc in data.gcs) {
-          for (let key of keys) {
-            let data_set = data.gcs[gc][key];
-            // (1) Create a ranked instance type array that sorts instance types by memory size (overall).
-            data_set.ranked_instance_types = [... data_set.non_empty_instance_types ];
-            data_set.ranked_instance_types = data_set.ranked_instance_types.sort(function(a,b) {
+        for (const isolate in data) {
+          for (const gc in data[isolate].gcs) {
+            for (const key of keys[isolate]) {
+              const data_set = data[isolate].gcs[gc][key];
+              // (1) Create a ranked instance type array that sorts instance types by memory size (overall).
+              // data_set.ranked_instance_types = ;
+              data_set.ranked_instance_types = [... data_set.non_empty_instance_types ].sort(function(a,b) {
               if (data_set.instance_type_data[a].overall > data_set.instance_type_data[b].overall) {
-                return 1;
-              } else if (data_set.instance_type_data[a].overall < data_set.instance_type_data[b].overall) {
-                return -1;
-              }
-              return 0;
-            });
+                  return 1;
+                } else if (data_set.instance_type_data[a].overall < data_set.instance_type_data[b].overall) {
+                  return -1;
+                }
+                return 0;
+              });
 
-            // (2) Create *FIXED_ARRAY_UNKNOWN_SUB_TYPE that account for all missing fixed array sub types.
-            let fixed_array_data = Object.assign({}, data_set.instance_type_data.FIXED_ARRAY_TYPE);
-            for (let instance_type in data_set.instance_type_data) {
-              if (!instance_type.startsWith("*FIXED_ARRAY")) continue;
-              let subtype = data_set.instance_type_data[instance_type];
-              fixed_array_data.count -= subtype.count;
-              fixed_array_data.overall -= subtype.overall;
-              for (let i = 0; i < fixed_array_data.overall_histogram.length; i++) {
-                fixed_array_data.overall_histogram[i] -= subtype.overall_histogram[i];
+
+              // (2) Create *FIXED_ARRAY_UNKNOWN_SUB_TYPE that account for all missing fixed array sub types.
+              const fixed_array_data = Object.assign({}, data_set.instance_type_data.FIXED_ARRAY_TYPE);
+              for (const instance_type in data_set.instance_type_data) {
+                if (!instance_type.startsWith("*FIXED_ARRAY")) continue;
+                const subtype = data_set.instance_type_data[instance_type];
+                fixed_array_data.count -= subtype.count;
+                fixed_array_data.overall -= subtype.overall;
+                for (let i = 0; i < fixed_array_data.overall_histogram.length; i++) {
+                  fixed_array_data.overall_histogram[i] -= subtype.overall_histogram[i];
+                }
               }
+
+              // Emit log messages for negative values.
+              checkNonNegativeProperty(fixed_array_data, "count");
+              checkNonNegativeProperty(fixed_array_data, "overall");
+              for (let i = 0; i < fixed_array_data.overall_histogram.length; i++) {
+                checkNonNegativeProperty(fixed_array_data.overall_histogram, i);
+              }
+
+              data_set.instance_type_data["*FIXED_ARRAY_UNKNOWN_SUB_TYPE"] = fixed_array_data;
+              data_set.non_empty_instance_types.add("*FIXED_ARRAY_UNKNOWN_SUB_TYPE");
             }
-            // Emit log messages for negative values.
-            checkNonNegativeProperty(fixed_array_data, "count");
-            checkNonNegativeProperty(fixed_array_data, "overall");
-            for (let i = 0; i < fixed_array_data.overall_histogram.length; i++) {
-              checkNonNegativeProperty(fixed_array_data.overall_histogram, i);
-            }
-            data_set.instance_type_data["*FIXED_ARRAY_UNKNOWN_SUB_TYPE"] = fixed_array_data;
-            data_set.non_empty_instance_types.add("*FIXED_ARRAY_UNKNOWN_SUB_TYPE");
           }
         }
         console.log(data);
-        this.handleDone(data, true, file.name);
+        this.handleDone(data, file.name);
       }.bind(this)
       result.readAsText(file);
     } else { 
       console.log("Failed to load file");
     }
   },
-  handleDone: function(data, failed, file_name) {
+  handleDone: function(data, file_name) {
     this.setState({
       inner_text: "Finished loading '" + file_name + "'"
     });

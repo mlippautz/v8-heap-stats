@@ -1,7 +1,7 @@
 import React from "react";
 
-import TraceFileReader from "./trace-file-reader"
-import {AreaChart, BarChart, PieChart} from "./basic-charts"
+import TraceFileReader from "./trace-file-reader";
+import {AreaChart, BarChart, PieChart} from "./basic-charts";
 
 let KB = 1024;
 let MB = 1024 * KB;
@@ -11,23 +11,57 @@ export default React.createClass({
     return {
       data: null,
       threshold: 0.01,
-      selected: null,
+
+      selected_isolate: null,
+      selected_gc: null,
       selected_instance_type: null,
     };
   },
+
   handleNewData: function(data) {
-    this.setState({data: data});
+    let first_isolate;
+    for (const isolate in data) {
+      first_isolate = isolate;
+      break;
+    }
+
+    this.setState({
+      data: data, 
+      threshold: this.state.threshold,
+
+      selected_isolate: first_isolate,
+      selected_gc: null,
+      selected_instance_type: null,
+    });
+  },
+
+  handleIsolateChange: function(e) {
+    console.log("Selected isolate: " + e.target.value);
+    this.setState({
+      data: this.state.data, 
+      threshold: this.state.threshold,
+
+      selected_isolate: e.target.value,
+      selected_gc: null,
+      selected_instance_type: null,
+    });
+  },
+
+  selectedIsolateData: function() {
+    if (this.state.data == null) return null;
+    return this.state.data[this.state.selected_isolate];
   },
 
   timelineData:function() {
-    if (this.state.data == null) return null;
-    let per_gc_data = this.state.data.gcs;
-    let dataset = [];
-    let labels = ['Time [ms]'];
+    const isolate_data = this.selectedIsolateData();
+    if (isolate_data == null) return null;
+    const per_gc_data = isolate_data.gcs;
+    const dataset = [];
+    const labels = ['Time [ms]'];
     let gc_count = 0;
     for (let gc in per_gc_data) {
       dataset[gc_count] = [ per_gc_data[gc].time ]
-      for (let instance_type of this.state.data.non_empty_instance_types) {
+      for (let instance_type of isolate_data.non_empty_instance_types) {
         if (instance_type.startsWith("*")) continue;
 
         if (gc_count == 0) labels.push(instance_type);
@@ -45,8 +79,9 @@ export default React.createClass({
   },
 
   timelineDataGrouped:function() {
-    if (this.state.data == null) return null;
-    let per_gc_data = this.state.data.gcs;
+    const isolate_data = this.selectedIsolateData();
+    if (isolate_data == null) return null;
+    const per_gc_data = isolate_data.gcs;
     let dataset = [];
     let labels = ['Time [ms]'];
     let gc_count = 0;
@@ -72,7 +107,7 @@ export default React.createClass({
           }
         }
 
-        for (let instance_type of this.state.data.non_empty_instance_types) {
+        for (let instance_type of isolate_data.non_empty_instance_types) {
           if (instance_type.startsWith("*")) continue;
           if (!interesting_instance_types.has(instance_type)) {
             non_interesting_instance_types.add(instance_type);
@@ -107,24 +142,26 @@ export default React.createClass({
   },
 
   _rawData: function(key, header, selector, name_callback, value_callback) {
-    let data = this.selectedGCData();
-    if (data == null) return null;
+    const gc_data = this.selectedGCData();
+    if (gc_data == null) return null;
 
     let dataset = [['InstanceType', ...header]];
-    for (let entry of data[key].non_empty_instance_types) {
+    for (let entry of gc_data[key].non_empty_instance_types) {
       if (selector(entry)) {
         dataset.push([name_callback(entry),
-                      ...value_callback(data[key].instance_type_data[entry])]);
+                      ...value_callback(gc_data[key].instance_type_data[entry])]);
       }
     }
     return dataset;
   },
 
   selectedGCData: function() {
-    if (this.state.data == null) return null;
+    const isolate_data = this.selectedIsolateData();
+    if (isolate_data == null) return null;
     if (this.state.selected == null) return null;
 
-    return this.state.data.gcs[this.state.selected];
+    const selected_gc_data = isolate_data.gcs[this.state.selected];
+    return selected_gc_data;
   },
 
   selectedInstanceType: function() {
@@ -205,8 +242,8 @@ export default React.createClass({
     if (b === "Other") b = null;
 
     let selected = null;
-    for (let gc in this.state.data.gcs) {
-      if (this.state.data.gcs[gc].time == a) {
+    for (let gc in this.selectedIsolateData().gcs) {
+      if (this.selectedIsolateData().gcs[gc].time == a) {
         selected = gc;
         break;
       }
@@ -216,7 +253,8 @@ export default React.createClass({
       data: this.state.data,
       threshold: this.state.threshold,
       selected: selected,
-      selected_instance_type: b
+      selected_instance_type: b,
+      selected_isolate: this.state.selected_isolate
     });
   },
 
@@ -275,16 +313,37 @@ export default React.createClass({
     };
     let instanceTypeSizeHeight = "300px";
 
+    const isolateOptions = this.state.data == null ? 
+        (<option>Load some data first...</option>) : 
+        Object.keys(this.state.data).map(function(option) {
+          return (
+            <option key={option} value={option}>{option}</option>
+          );
+        });
+
     return (
       <div >
         <TraceFileReader onNewData={this.handleNewData} />
         <h1>V8 Heap Statistics</h1>
-        <p>
+
+        <p style={{clear: "both"}}>
           Visualize object stats gathered using <tt>--trace-gc-object-stats</tt>. 
         </p>
 
+        <p>
+          Isolate
+          <select 
+              disabled={ this.state.data == null ? "disabled" : "" } 
+              style={{marginLeft: "10px", verticalAlign: "middle"}}
+              onChange={this.handleIsolateChange}>
+            {isolateOptions}
+          </select>
+        </p>
+
         <div style={{display: this.state.data == null ? "none" : "inline"}}>
-        <h2>Timeline</h2>
+        <h2>
+          Timeline
+        </h2>
         <p>
           The plot shows the memory consumption for each instance type over time. Each data point corresponds to a sample
           collected during a major GC. Lines stack, i.e., the top line shows the overall memory consumption.

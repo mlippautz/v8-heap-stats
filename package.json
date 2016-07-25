@@ -14,7 +14,9 @@
     "webpack": "~1.13.1"
   },
   "devDependencies": {
-    "gh-pages": "~0.11.0"
+    "gh-pages": "~0.11.0",
+    "eslint-config-google": "~0.6.0",
+    "eslint": "~3.1.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -23,6 +25,9 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/mlippautz/v8-heap-stats.git"
+  },
+  "eslintConfig": {
+    "extends": "google"
   },
   "author": "V8 project authors",
   "license": "SEE LICENSE",
