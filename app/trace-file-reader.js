@@ -79,11 +79,9 @@ export default React.createClass({
           }
         }
 
-        // TODO: Get rid of this once counts/sizes match.
-        function fixNegativeValue(obj, property) {
+        function checkNonNegativeProperty(obj, property) {
           if (obj[property] < 0) {
-            console.log("Fixing propery '" + property + "' to 0. old value: " + obj[property]);
-            obj[property] = 0;
+            console.log("Propery '" + property + "' negative: " + obj[property]);
           }
         }
 
@@ -112,10 +110,11 @@ export default React.createClass({
                 fixed_array_data.overall_histogram[i] -= subtype.overall_histogram[i];
               }
             }
-            fixNegativeValue(fixed_array_data, "count");
-            fixNegativeValue(fixed_array_data, "overall");
+            // Emit log messages for negative values.
+            checkNonNegativeProperty(fixed_array_data, "count");
+            checkNonNegativeProperty(fixed_array_data, "overall");
             for (let i = 0; i < fixed_array_data.overall_histogram.length; i++) {
-              fixNegativeValue(fixed_array_data.overall_histogram, i);
+              checkNonNegativeProperty(fixed_array_data.overall_histogram, i);
             }
             data_set.instance_type_data["*FIXED_ARRAY_UNKNOWN_SUB_TYPE"] = fixed_array_data;
             data_set.non_empty_instance_types.add("*FIXED_ARRAY_UNKNOWN_SUB_TYPE");
