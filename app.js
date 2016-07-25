@@ -21128,17 +21128,51 @@
 	    return {
 	      data: null,
 	      threshold: 0.01,
-	      selected: null,
+
+	      selected_isolate: null,
+	      selected_gc: null,
 	      selected_instance_type: null
 	    };
 	  },
+
 	  handleNewData: function handleNewData(data) {
-	    this.setState({ data: data });
+	    var first_isolate = void 0;
+	    for (var isolate in data) {
+	      first_isolate = isolate;
+	      break;
+	    }
+
+	    this.setState({
+	      data: data,
+	      threshold: this.state.threshold,
+
+	      selected_isolate: first_isolate,
+	      selected_gc: null,
+	      selected_instance_type: null
+	    });
+	  },
+
+	  handleIsolateChange: function handleIsolateChange(e) {
+	    console.log("Selected isolate: " + e.target.value);
+	    this.setState({
+	      data: this.state.data,
+	      threshold: this.state.threshold,
+
+	      selected_isolate: e.target.value,
+	      selected_gc: null,
+	      selected_instance_type: null
+	    });
+	  },
+
+	  selectedIsolateData: function selectedIsolateData() {
+	    if (this.state.data == null) return null;
+	    return this.state.data[this.state.selected_isolate];
 	  },
 
 	  timelineData: function timelineData() {
-	    if (this.state.data == null) return null;
-	    var per_gc_data = this.state.data.gcs;
+	    var isolate_data = this.selectedIsolateData();
+	    if (isolate_data == null) return null;
+	    var per_gc_data = isolate_data.gcs;
 	    var dataset = [];
 	    var labels = ['Time [ms]'];
 	    var gc_count = 0;
@@ -21149,7 +21183,7 @@
 	      var _iteratorError = undefined;
 
 	      try {
-	        for (var _iterator = this.state.data.non_empty_instance_types[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+	        for (var _iterator = isolate_data.non_empty_instance_types[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 	          var instance_type = _step.value;
 
 	          if (instance_type.startsWith("*")) continue;
@@ -21184,8 +21218,9 @@
 	  },
 
 	  timelineDataGrouped: function timelineDataGrouped() {
-	    if (this.state.data == null) return null;
-	    var per_gc_data = this.state.data.gcs;
+	    var isolate_data = this.selectedIsolateData();
+	    if (isolate_data == null) return null;
+	    var per_gc_data = isolate_data.gcs;
 	    var dataset = [];
 	    var labels = ['Time [ms]'];
 	    var gc_count = 0;
@@ -21214,7 +21249,7 @@
 	        var _iteratorError2 = undefined;
 
 	        try {
-	          for (var _iterator2 = this.state.data.non_empty_instance_types[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+	          for (var _iterator2 = isolate_data.non_empty_instance_types[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
 	            var _instance_type = _step2.value;
 
 	            if (_instance_type.startsWith("*")) continue;
@@ -21287,8 +21322,8 @@
 	  },
 
 	  _rawData: function _rawData(key, header, selector, name_callback, value_callback) {
-	    var data = this.selectedGCData();
-	    if (data == null) return null;
+	    var gc_data = this.selectedGCData();
+	    if (gc_data == null) return null;
 
 	    var dataset = [['InstanceType'].concat(_toConsumableArray(header))];
 	    var _iteratorNormalCompletion4 = true;
@@ -21296,11 +21331,11 @@
 	    var _iteratorError4 = undefined;
 
 	    try {
-	      for (var _iterator4 = data[key].non_empty_instance_types[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+	      for (var _iterator4 = gc_data[key].non_empty_instance_types[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
 	        var entry = _step4.value;
 
 	        if (selector(entry)) {
-	          dataset.push([name_callback(entry)].concat(_toConsumableArray(value_callback(data[key].instance_type_data[entry]))));
+	          dataset.push([name_callback(entry)].concat(_toConsumableArray(value_callback(gc_data[key].instance_type_data[entry]))));
 	        }
 	      }
 	    } catch (err) {
@@ -21322,10 +21357,12 @@
 	  },
 
 	  selectedGCData: function selectedGCData() {
-	    if (this.state.data == null) return null;
+	    var isolate_data = this.selectedIsolateData();
+	    if (isolate_data == null) return null;
 	    if (this.state.selected == null) return null;
 
-	    return this.state.data.gcs[this.state.selected];
+	    var selected_gc_data = isolate_data.gcs[this.state.selected];
+	    return selected_gc_data;
 	  },
 
 	  selectedInstanceType: function selectedInstanceType() {
@@ -21412,8 +21449,8 @@
 	    if (b === "Other") b = null;
 
 	    var selected = null;
-	    for (var gc in this.state.data.gcs) {
-	      if (this.state.data.gcs[gc].time == a) {
+	    for (var gc in this.selectedIsolateData().gcs) {
+	      if (this.selectedIsolateData().gcs[gc].time == a) {
 	        selected = gc;
 	        break;
 	      }
@@ -21423,7 +21460,8 @@
 	      data: this.state.data,
 	      threshold: this.state.threshold,
 	      selected: selected,
-	      selected_instance_type: b
+	      selected_instance_type: b,
+	      selected_isolate: this.state.selected_isolate
 	    });
 	  },
 
@@ -21482,6 +21520,18 @@
 	    };
 	    var instanceTypeSizeHeight = "300px";
 
+	    var isolateOptions = this.state.data == null ? _react2.default.createElement(
+	      "option",
+	      null,
+	      "Load some data first..."
+	    ) : Object.keys(this.state.data).map(function (option) {
+	      return _react2.default.createElement(
+	        "option",
+	        { key: option, value: option },
+	        option
+	      );
+	    });
+
 	    return _react2.default.createElement(
 	      "div",
 	      null,
@@ -21493,7 +21543,7 @@
 	      ),
 	      _react2.default.createElement(
 	        "p",
-	        null,
+	        { style: { clear: "both" } },
 	        "Visualize object stats gathered using ",
 	        _react2.default.createElement(
 	          "tt",
@@ -21501,6 +21551,19 @@
 	          "--trace-gc-object-stats"
 	        ),
 	        "."
+	      ),
+	      _react2.default.createElement(
+	        "p",
+	        null,
+	        "Isolate",
+	        _react2.default.createElement(
+	          "select",
+	          {
+	            disabled: this.state.data == null ? "disabled" : "",
+	            style: { marginLeft: "10px", verticalAlign: "middle" },
+	            onChange: this.handleIsolateChange },
+	          isolateOptions
+	        )
 	      ),
 	      _react2.default.createElement(
 	        "div",
@@ -21666,11 +21729,24 @@
 	          }
 	          return null;
 	        });
-	        var data = {
-	          non_empty_instance_types: new Set(),
-	          gcs: {}
+
+	        var data = {}; // Final data container.
+	        var keys = {}; // Collecting 'keys' per isolate.
+
+	        var createEntryIfNeeded = function createEntryIfNeeded(entry) {
+	          if (!(entry.isolate in data)) {
+	            data[entry.isolate] = {
+	              non_empty_instance_types: new Set(),
+	              gcs: {}
+	            };
+	          }
+	          if (!(entry.id in data[entry.isolate].gcs)) {
+	            data[entry.isolate].gcs[entry.id] = {
+	              non_empty_instance_types: new Set()
+	            };
+	          }
 	        };
-	        var keys = new Set();
+
 	        var _iteratorNormalCompletion = true;
 	        var _didIteratorError = false;
 	        var _iteratorError = undefined;
@@ -21683,16 +21759,13 @@
 	            if (entry.type == undefined) continue;
 
 	            if (entry.type === "gc_descriptor") {
-	              if (!(entry.id in data.gcs)) {
-	                data.gcs[entry.id] = {
-	                  time: entry.time,
-	                  non_empty_instance_types: new Set()
-	                };
-	              }
+	              createEntryIfNeeded(entry);
+	              data[entry.isolate].gcs[entry.id].time = entry.time;
 	            } else if (entry.type === "instance_type_data") {
-	              if (entry.id in data.gcs) {
-	                if (!(entry.key in data.gcs[entry.id])) {
-	                  data.gcs[entry.id][entry.key] = {
+	              if (entry.id in data[entry.isolate].gcs) {
+	                createEntryIfNeeded(entry);
+	                if (!(entry.key in data[entry.isolate].gcs[entry.id])) {
+	                  data[entry.isolate].gcs[entry.id][entry.key] = {
 	                    instance_type_data: {},
 	                    non_empty_instance_types: new Set(),
 	                    overall: 0
@@ -21702,38 +21775,40 @@
 	                  var instance_type_name = entry.instance_type_name;
 	                  var id = entry.id;
 	                  var key = entry.key;
-	                  keys.add(key);
-	                  data.gcs[id][key].instance_type_data[instance_type_name] = {
+	                  if (!(entry.isolate in keys)) {
+	                    keys[entry.isolate] = new Set();
+	                  }
+	                  keys[entry.isolate].add(key);
+	                  data[entry.isolate].gcs[id][key].instance_type_data[instance_type_name] = {
 	                    "overall": entry.overall,
 	                    "count": entry.count,
 	                    "over_allocated": entry.over_allocated,
 	                    "overall_histogram": entry.histogram,
 	                    "over_allocated_histogram": entry.over_allocated_histogram
 	                  };
-	                  data.gcs[id][key].overall += entry.overall;
+	                  data[entry.isolate].gcs[id][key].overall += entry.overall;
 
-	                  data.gcs[id][key].non_empty_instance_types.add(instance_type_name);
-	                  data.gcs[id].non_empty_instance_types.add(instance_type_name);
-	                  data.non_empty_instance_types.add(instance_type_name);
+	                  data[entry.isolate].gcs[id][key].non_empty_instance_types.add(instance_type_name);
+	                  data[entry.isolate].gcs[id].non_empty_instance_types.add(instance_type_name);
+	                  data[entry.isolate].non_empty_instance_types.add(instance_type_name);
 	                }
 	              }
 	            } else if (entry.type === "bucket_sizes") {
-	              if (entry.id in data.gcs) {
-	                if (!(entry.key in data.gcs[entry.id])) {
-	                  data.gcs[entry.id][entry.key] = {
+	              if (entry.id in data[entry.isolate].gcs) {
+	                createEntryIfNeeded(entry);
+	                if (!(entry.key in data[entry.isolate].gcs[entry.id])) {
+	                  data[entry.isolate].gcs[entry.id][entry.key] = {
 	                    instance_type_data: {},
 	                    non_empty_instance_types: new Set(),
 	                    overall: 0
 	                  };
 	                }
-	                data.gcs[entry.id][entry.key].bucket_sizes = entry.sizes;
+	                data[entry.isolate].gcs[entry.id][entry.key].bucket_sizes = entry.sizes;
 	              }
 	            } else {
 	              console.log("Unknown entry type: " + entry.type);
 	            }
 	          }
-
-	          // TODO: Get rid of this once counts/sizes match.
 	        } catch (err) {
 	          _didIteratorError = true;
 	          _iteratorError = err;
@@ -21749,81 +21824,85 @@
 	          }
 	        }
 
-	        function fixNegativeValue(obj, property) {
+	        function checkNonNegativeProperty(obj, property) {
 	          if (obj[property] < 0) {
-	            console.log("Fixing propery '" + property + "' to 0. old value: " + obj[property]);
-	            obj[property] = 0;
+	            console.log("Propery '" + property + "' negative: " + obj[property]);
 	          }
 	        }
 
-	        for (var gc in data.gcs) {
-	          var _iteratorNormalCompletion2 = true;
-	          var _didIteratorError2 = false;
-	          var _iteratorError2 = undefined;
+	        for (var isolate in data) {
+	          for (var gc in data[isolate].gcs) {
+	            var _iteratorNormalCompletion2 = true;
+	            var _didIteratorError2 = false;
+	            var _iteratorError2 = undefined;
 
-	          try {
-	            var _loop = function _loop() {
-	              var key = _step2.value;
-
-	              var data_set = data.gcs[gc][key];
-	              // (1) Create a ranked instance type array that sorts instance types by memory size (overall).
-	              data_set.ranked_instance_types = [].concat(_toConsumableArray(data_set.non_empty_instance_types));
-	              data_set.ranked_instance_types = data_set.ranked_instance_types.sort(function (a, b) {
-	                if (data_set.instance_type_data[a].overall > data_set.instance_type_data[b].overall) {
-	                  return 1;
-	                } else if (data_set.instance_type_data[a].overall < data_set.instance_type_data[b].overall) {
-	                  return -1;
-	                }
-	                return 0;
-	              });
-
-	              // (2) Create *FIXED_ARRAY_UNKNOWN_SUB_TYPE that account for all missing fixed array sub types.
-	              var fixed_array_data = Object.assign({}, data_set.instance_type_data.FIXED_ARRAY_TYPE);
-	              for (var instance_type in data_set.instance_type_data) {
-	                if (!instance_type.startsWith("*FIXED_ARRAY")) continue;
-	                var subtype = data_set.instance_type_data[instance_type];
-	                fixed_array_data.count -= subtype.count;
-	                fixed_array_data.overall -= subtype.overall;
-	                for (var i = 0; i < fixed_array_data.overall_histogram.length; i++) {
-	                  fixed_array_data.overall_histogram[i] -= subtype.overall_histogram[i];
-	                }
-	              }
-	              fixNegativeValue(fixed_array_data, "count");
-	              fixNegativeValue(fixed_array_data, "overall");
-	              for (var _i = 0; _i < fixed_array_data.overall_histogram.length; _i++) {
-	                fixNegativeValue(fixed_array_data.overall_histogram, _i);
-	              }
-	              data_set.instance_type_data["*FIXED_ARRAY_UNKNOWN_SUB_TYPE"] = fixed_array_data;
-	              data_set.non_empty_instance_types.add("*FIXED_ARRAY_UNKNOWN_SUB_TYPE");
-	            };
-
-	            for (var _iterator2 = keys[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-	              _loop();
-	            }
-	          } catch (err) {
-	            _didIteratorError2 = true;
-	            _iteratorError2 = err;
-	          } finally {
 	            try {
-	              if (!_iteratorNormalCompletion2 && _iterator2.return) {
-	                _iterator2.return();
+	              var _loop = function _loop() {
+	                var key = _step2.value;
+
+	                var data_set = data[isolate].gcs[gc][key];
+	                // (1) Create a ranked instance type array that sorts instance types by memory size (overall).
+	                // data_set.ranked_instance_types = ;
+	                data_set.ranked_instance_types = [].concat(_toConsumableArray(data_set.non_empty_instance_types)).sort(function (a, b) {
+	                  if (data_set.instance_type_data[a].overall > data_set.instance_type_data[b].overall) {
+	                    return 1;
+	                  } else if (data_set.instance_type_data[a].overall < data_set.instance_type_data[b].overall) {
+	                    return -1;
+	                  }
+	                  return 0;
+	                });
+
+	                // (2) Create *FIXED_ARRAY_UNKNOWN_SUB_TYPE that account for all missing fixed array sub types.
+	                var fixed_array_data = Object.assign({}, data_set.instance_type_data.FIXED_ARRAY_TYPE);
+	                for (var instance_type in data_set.instance_type_data) {
+	                  if (!instance_type.startsWith("*FIXED_ARRAY")) continue;
+	                  var subtype = data_set.instance_type_data[instance_type];
+	                  fixed_array_data.count -= subtype.count;
+	                  fixed_array_data.overall -= subtype.overall;
+	                  for (var i = 0; i < fixed_array_data.overall_histogram.length; i++) {
+	                    fixed_array_data.overall_histogram[i] -= subtype.overall_histogram[i];
+	                  }
+	                }
+
+	                // Emit log messages for negative values.
+	                checkNonNegativeProperty(fixed_array_data, "count");
+	                checkNonNegativeProperty(fixed_array_data, "overall");
+	                for (var _i = 0; _i < fixed_array_data.overall_histogram.length; _i++) {
+	                  checkNonNegativeProperty(fixed_array_data.overall_histogram, _i);
+	                }
+
+	                data_set.instance_type_data["*FIXED_ARRAY_UNKNOWN_SUB_TYPE"] = fixed_array_data;
+	                data_set.non_empty_instance_types.add("*FIXED_ARRAY_UNKNOWN_SUB_TYPE");
+	              };
+
+	              for (var _iterator2 = keys[isolate][Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+	                _loop();
 	              }
+	            } catch (err) {
+	              _didIteratorError2 = true;
+	              _iteratorError2 = err;
 	            } finally {
-	              if (_didIteratorError2) {
-	                throw _iteratorError2;
+	              try {
+	                if (!_iteratorNormalCompletion2 && _iterator2.return) {
+	                  _iterator2.return();
+	                }
+	              } finally {
+	                if (_didIteratorError2) {
+	                  throw _iteratorError2;
+	                }
 	              }
 	            }
 	          }
 	        }
 	        console.log(data);
-	        this.handleDone(data, true, file.name);
+	        this.handleDone(data, file.name);
 	      }.bind(this);
 	      result.readAsText(file);
 	    } else {
 	      console.log("Failed to load file");
 	    }
 	  },
-	  handleDone: function handleDone(data, failed, file_name) {
+	  handleDone: function handleDone(data, file_name) {
 	    this.setState({
 	      inner_text: "Finished loading '" + file_name + "'"
 	    });
