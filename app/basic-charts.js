@@ -2,23 +2,23 @@ import React from "react";
 
 var AreaChart = React.createClass({
   getInitialState: function() {
-    return { chart: null };
+    return {chart: null};
   },
   _clearChartIfNecessary: function() {
-    if (this.state.chart != null){
+    if (this.state.chart !== null) {
       this.state.chart.clearChart();
     }
   },
   update: function(e) {
     this._clearChartIfNecessary();
-    if (this.props.chartData == null) return;
+    if (this.props.chartData === null) return;
 
-    var data = google.visualization.arrayToDataTable(this.props.chartData);
-    var chart = new google.visualization.AreaChart(this.refs.chart);
+    const data = google.visualization.arrayToDataTable(this.props.chartData);
+    const chart = new google.visualization.AreaChart(this.refs.chart);
     chart.draw(data, this.props.chartOptions);
     this.state.chart = chart;
 
-    var selectHandler = function () {
+    var selectHandler = function() {
       var selectedItem = chart.getSelection()[0];
       if (selectedItem && ('handleSelection' in this.props)) {
         this.props.handleSelection(data.getValue(selectedItem.row, 0),
@@ -41,19 +41,19 @@ var AreaChart = React.createClass({
 
 var PieChart = React.createClass({
   getInitialState: function() {
-    return { chart: null };
+    return {chart: null};
   },
   _clearChartIfNecessary: function() {
-    if (this.state.chart != null){
+    if (this.state.chart !== null) {
       this.state.chart.clearChart();
     }
   },
   update: function(e) {
     this._clearChartIfNecessary();
-    if (this.props.chartData == null) return;
+    if (this.props.chartData === null) return;
 
     var chart = new google.visualization.PieChart(this.refs.chart);
-    chart.draw(google.visualization.arrayToDataTable(this.props.chartData), 
+    chart.draw(google.visualization.arrayToDataTable(this.props.chartData),
                this.props.chartOptions);
     this.state.chart = chart;
   },
@@ -71,16 +71,16 @@ var PieChart = React.createClass({
 
 var BarChart = React.createClass({
   getInitialState: function() {
-    return { chart: null };
+    return {chart: null};
   },
   _clearChartIfNecessary: function() {
-    if (this.state.chart != null){
+    if (this.state.chart !== null) {
       this.state.chart.clearChart();
     }
   },
   update: function(e) {
     this._clearChartIfNecessary();
-    if (this.props.chartData == null) return;
+    if (this.props.chartData === null) return;
 
     var chart = new google.charts.Bar(this.refs.chart);
     chart.draw(google.visualization.arrayToDataTable(this.props.chartData),
@@ -100,7 +100,7 @@ var BarChart = React.createClass({
 });
 
 module.exports = {
-    AreaChart: AreaChart,
-    PieChart: PieChart,
-    BarChart: BarChart
-}
+  AreaChart: AreaChart,
+  PieChart: PieChart,
+  BarChart: BarChart
+};
