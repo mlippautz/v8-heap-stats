@@ -60,6 +60,9 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	// eslint-disable-line no-unused-vars
+
+	// eslint-disable-line no-unused-vars
 	_reactDom2.default.render(_react2.default.createElement(_v8HeapStats2.default, { name: "World" }), document.getElementById('content'));
 
 /***/ },
@@ -21116,10 +21119,12 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } } // eslint-disable-line no-unused-vars
+
+
+	// eslint-disable-line no-unused-vars
 
 	var KB = 1024;
-	var MB = 1024 * KB;
 
 	exports.default = _react2.default.createClass({
 	  displayName: "v8-heap-stats",
@@ -21136,17 +21141,38 @@
 	  },
 
 	  handleNewData: function handleNewData(data) {
-	    var first_isolate = void 0;
-	    for (var isolate in data) {
-	      first_isolate = isolate;
-	      break;
+	    var firstIsolate = void 0;
+	    var _iteratorNormalCompletion = true;
+	    var _didIteratorError = false;
+	    var _iteratorError = undefined;
+
+	    try {
+	      for (var _iterator = Object.keys(data)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+	        var isolate = _step.value;
+
+	        firstIsolate = isolate;
+	        break;
+	      }
+	    } catch (err) {
+	      _didIteratorError = true;
+	      _iteratorError = err;
+	    } finally {
+	      try {
+	        if (!_iteratorNormalCompletion && _iterator.return) {
+	          _iterator.return();
+	        }
+	      } finally {
+	        if (_didIteratorError) {
+	          throw _iteratorError;
+	        }
+	      }
 	    }
 
 	    this.setState({
 	      data: data,
 	      threshold: this.state.threshold,
 
-	      selectedIsolate: first_isolate,
+	      selectedIsolate: firstIsolate,
 	      selectedGC: null,
 	      selectedInstanceType: null
 	    });
@@ -21170,57 +21196,79 @@
 	  },
 
 	  timelineData: function timelineData() {
-	    var isolate_data = this.selectedIsolateData();
-	    if (isolate_data === null) return null;
-	    var per_gc_data = isolate_data.gcs;
+	    var isolateData = this.selectedIsolateData();
+	    if (isolateData === null) return null;
+	    var perGCData = isolateData.gcs;
 	    var dataset = [];
 	    var labels = ['Time [ms]'];
-	    var gc_count = 0;
-	    for (var gc in per_gc_data) {
-	      dataset[gc_count] = [per_gc_data[gc].time];
-	      var _iteratorNormalCompletion = true;
-	      var _didIteratorError = false;
-	      var _iteratorError = undefined;
+	    var gcCount = 0;
+	    var _iteratorNormalCompletion2 = true;
+	    var _didIteratorError2 = false;
+	    var _iteratorError2 = undefined;
 
-	      try {
-	        for (var _iterator = isolate_data.non_empty_instance_types[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-	          var instance_type = _step.value;
+	    try {
+	      for (var _iterator2 = Object.keys(perGCData)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+	        var gc = _step2.value;
 
-	          if (instance_type.startsWith("*")) continue;
+	        dataset[gcCount] = [perGCData[gc].time];
+	        var _iteratorNormalCompletion3 = true;
+	        var _didIteratorError3 = false;
+	        var _iteratorError3 = undefined;
 
-	          if (gc_count === 0) labels.push(instance_type);
+	        try {
+	          for (var _iterator3 = isolateData.non_empty_instance_types[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+	            var instanceType = _step3.value;
 
-	          var instance_type_data = per_gc_data[gc].live.instance_type_data;
-	          if (instance_type in instance_type_data) {
-	            dataset[gc_count].push(instance_type_data[instance_type].overall);
-	          } else {
-	            dataset[gc_count].push(0);
+	            if (instanceType.startsWith("*")) continue;
+
+	            if (gcCount === 0) labels.push(instanceType);
+
+	            var instanceTypeData = perGCData[gc].live.instance_type_data;
+	            if (instanceType in instanceTypeData) {
+	              dataset[gcCount].push(instanceTypeData[instanceType].overall);
+	            } else {
+	              dataset[gcCount].push(0);
+	            }
+	          }
+	        } catch (err) {
+	          _didIteratorError3 = true;
+	          _iteratorError3 = err;
+	        } finally {
+	          try {
+	            if (!_iteratorNormalCompletion3 && _iterator3.return) {
+	              _iterator3.return();
+	            }
+	          } finally {
+	            if (_didIteratorError3) {
+	              throw _iteratorError3;
+	            }
 	          }
 	        }
-	      } catch (err) {
-	        _didIteratorError = true;
-	        _iteratorError = err;
+
+	        gcCount++;
+	      }
+	    } catch (err) {
+	      _didIteratorError2 = true;
+	      _iteratorError2 = err;
+	    } finally {
+	      try {
+	        if (!_iteratorNormalCompletion2 && _iterator2.return) {
+	          _iterator2.return();
+	        }
 	      } finally {
-	        try {
-	          if (!_iteratorNormalCompletion && _iterator.return) {
-	            _iterator.return();
-	          }
-	        } finally {
-	          if (_didIteratorError) {
-	            throw _iteratorError;
-	          }
+	        if (_didIteratorError2) {
+	          throw _iteratorError2;
 	        }
 	      }
-
-	      gc_count++;
 	    }
+
 	    return [labels].concat(dataset);
 	  },
 
 	  timelineDataGrouped: function timelineDataGrouped() {
-	    var isolate_data = this.selectedIsolateData();
-	    if (isolate_data === null) return null;
-	    var per_gc_data = isolate_data.gcs;
+	    var isolateData = this.selectedIsolateData();
+	    if (isolateData === null) return null;
+	    var perGCData = isolateData.gcs;
 	    var dataset = [];
 	    var labels = ['Time [ms]'];
 	    var gcCount = 0;
@@ -21228,87 +21276,87 @@
 	    var threshold = parseFloat(this.state.threshold);
 	    if (isNaN(threshold)) threshold = 0;
 
-	    var interesting_instance_types_array = [];
-	    var interesting_instance_types = new Set();
-	    var non_interesting_instance_types = new Set();
-	    for (var gc in per_gc_data) {
+	    var interestingInstanceTypesArray = [];
+	    var interestingInstanceTypes = new Set();
+	    var nonInterestingInstanceTypes = new Set();
+	    for (var gc in perGCData) {
 	      if (gcCount === 0) {
-	        for (var key in per_gc_data[gc].live.ranked_instance_types) {
-	          var instance_type = per_gc_data[gc].live.ranked_instance_types[key];
-	          if (instance_type.startsWith("*")) continue;
-	          var instance_type_data = per_gc_data[gc].live.instance_type_data;
-	          if (instance_type in instance_type_data && instance_type_data[instance_type].overall > per_gc_data[gc].live.overall * threshold) {
-	            interesting_instance_types_array.push(instance_type);
-	            interesting_instance_types.add(instance_type);
+	        for (var i = 0; i < perGCData[gc].live.rankedInstanceTypes.length; i++) {
+	          var instanceType = perGCData[gc].live.rankedInstanceTypes[i];
+	          if (instanceType.startsWith("*")) continue;
+	          var instanceTypeData = perGCData[gc].live.instance_type_data;
+	          if (instanceType in instanceTypeData && instanceTypeData[instanceType].overall > perGCData[gc].live.overall * threshold) {
+	            interestingInstanceTypesArray.push(instanceType);
+	            interestingInstanceTypes.add(instanceType);
 	          }
 	        }
 
-	        var _iteratorNormalCompletion2 = true;
-	        var _didIteratorError2 = false;
-	        var _iteratorError2 = undefined;
+	        var _iteratorNormalCompletion4 = true;
+	        var _didIteratorError4 = false;
+	        var _iteratorError4 = undefined;
 
 	        try {
-	          for (var _iterator2 = isolate_data.non_empty_instance_types[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-	            var _instance_type = _step2.value;
+	          for (var _iterator4 = isolateData.non_empty_instance_types[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+	            var _instanceType = _step4.value;
 
-	            if (_instance_type.startsWith("*")) continue;
-	            if (!interesting_instance_types.has(_instance_type)) {
-	              non_interesting_instance_types.add(_instance_type);
+	            if (_instanceType.startsWith("*")) continue;
+	            if (!interestingInstanceTypes.has(_instanceType)) {
+	              nonInterestingInstanceTypes.add(_instanceType);
 	            }
 	          }
 	        } catch (err) {
-	          _didIteratorError2 = true;
-	          _iteratorError2 = err;
+	          _didIteratorError4 = true;
+	          _iteratorError4 = err;
 	        } finally {
 	          try {
-	            if (!_iteratorNormalCompletion2 && _iterator2.return) {
-	              _iterator2.return();
+	            if (!_iteratorNormalCompletion4 && _iterator4.return) {
+	              _iterator4.return();
 	            }
 	          } finally {
-	            if (_didIteratorError2) {
-	              throw _iteratorError2;
+	            if (_didIteratorError4) {
+	              throw _iteratorError4;
 	            }
 	          }
 	        }
 	      }
 
 	      var other = 0;
-	      dataset[gcCount] = [per_gc_data[gc].time];
-	      for (var _key in interesting_instance_types_array) {
-	        var _instance_type2 = interesting_instance_types_array[_key];
-	        if (gcCount === 0) labels.push(_instance_type2);
-	        var instance_type_data = per_gc_data[gc].live.instance_type_data;
-	        if (_instance_type2 in instance_type_data) {
-	          dataset[gcCount].push(instance_type_data[_instance_type2].overall / KB);
+	      dataset[gcCount] = [perGCData[gc].time];
+	      for (var _i = 0; _i < interestingInstanceTypesArray.length; _i++) {
+	        var _instanceType2 = interestingInstanceTypesArray[_i];
+	        if (gcCount === 0) labels.push(_instanceType2);
+	        var _instanceTypeData = perGCData[gc].live.instance_type_data;
+	        if (_instanceType2 in _instanceTypeData) {
+	          dataset[gcCount].push(_instanceTypeData[_instanceType2].overall / KB);
 	        } else {
 	          dataset[gcCount].push(0);
 	        }
 	      }
 
-	      var _iteratorNormalCompletion3 = true;
-	      var _didIteratorError3 = false;
-	      var _iteratorError3 = undefined;
+	      var _iteratorNormalCompletion5 = true;
+	      var _didIteratorError5 = false;
+	      var _iteratorError5 = undefined;
 
 	      try {
-	        for (var _iterator3 = non_interesting_instance_types[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-	          var _instance_type3 = _step3.value;
+	        for (var _iterator5 = nonInterestingInstanceTypes[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+	          var _instanceType3 = _step5.value;
 
-	          var instance_type_data = per_gc_data[gc].live.instance_type_data;
-	          if (_instance_type3 in instance_type_data) {
-	            other += instance_type_data[_instance_type3].overall / KB;
+	          var _instanceTypeData2 = perGCData[gc].live.instance_type_data;
+	          if (_instanceType3 in _instanceTypeData2) {
+	            other += _instanceTypeData2[_instanceType3].overall / KB;
 	          }
 	        }
 	      } catch (err) {
-	        _didIteratorError3 = true;
-	        _iteratorError3 = err;
+	        _didIteratorError5 = true;
+	        _iteratorError5 = err;
 	      } finally {
 	        try {
-	          if (!_iteratorNormalCompletion3 && _iterator3.return) {
-	            _iterator3.return();
+	          if (!_iteratorNormalCompletion5 && _iterator5.return) {
+	            _iterator5.return();
 	          }
 	        } finally {
-	          if (_didIteratorError3) {
-	            throw _iteratorError3;
+	          if (_didIteratorError5) {
+	            throw _iteratorError5;
 	          }
 	        }
 	      }
@@ -21320,34 +21368,34 @@
 	    return [labels].concat(dataset);
 	  },
 
-	  _rawData: function _rawData(key, header, selector, name_callback, value_callback) {
+	  _rawData: function _rawData(key, header, selector, nameCallback, valueCallback) {
 	    var gcData = this.selectedGCData();
 	    if (gcData === null) return null;
 
 	    var dataset = [['InstanceType'].concat(_toConsumableArray(header))];
-	    var _iteratorNormalCompletion4 = true;
-	    var _didIteratorError4 = false;
-	    var _iteratorError4 = undefined;
+	    var _iteratorNormalCompletion6 = true;
+	    var _didIteratorError6 = false;
+	    var _iteratorError6 = undefined;
 
 	    try {
-	      for (var _iterator4 = gcData[key].non_empty_instance_types[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-	        var entry = _step4.value;
+	      for (var _iterator6 = gcData[key].non_empty_instance_types[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+	        var entry = _step6.value;
 
 	        if (selector(entry)) {
-	          dataset.push([name_callback(entry)].concat(_toConsumableArray(value_callback(gcData[key].instance_type_data[entry]))));
+	          dataset.push([nameCallback(entry)].concat(_toConsumableArray(valueCallback(gcData[key].instance_type_data[entry]))));
 	        }
 	      }
 	    } catch (err) {
-	      _didIteratorError4 = true;
-	      _iteratorError4 = err;
+	      _didIteratorError6 = true;
+	      _iteratorError6 = err;
 	    } finally {
 	      try {
-	        if (!_iteratorNormalCompletion4 && _iterator4.return) {
-	          _iterator4.return();
+	        if (!_iteratorNormalCompletion6 && _iterator6.return) {
+	          _iterator6.return();
 	        }
 	      } finally {
-	        if (_didIteratorError4) {
-	          throw _iteratorError4;
+	        if (_didIteratorError6) {
+	          throw _iteratorError6;
 	        }
 	      }
 	    }
@@ -21365,6 +21413,18 @@
 	  selectedInstanceType: function selectedInstanceType() {
 	    if (this.state.selectedInstanceType === null) return null;
 	    return this.state.selectedInstanceType;
+	  },
+
+	  selectedInstanceTypeData: function selectedInstanceTypeData(key) {
+	    var emptyResponse = {
+	      overall: 0
+	    };
+
+	    var instanceType = this.selectedInstanceType();
+	    var gcData = this.selectedGCData();
+	    if (gcData === null || instanceType === null) return emptyResponse;
+	    if (!(instanceType in gcData[key].instance_type_data)) return emptyResponse;
+	    return gcData[key].instance_type_data[instanceType];
 	  },
 
 	  fixedArraySubTypeName: function fixedArraySubTypeName(fullName) {
@@ -21415,13 +21475,13 @@
 	    });
 	  },
 
-	  instanceTypeSizeData: function instanceTypeSizeData(instance_type, key) {
-	    if (instance_type === null) return null;
+	  instanceTypeSizeData: function instanceTypeSizeData(instanceType, key) {
+	    if (instanceType === null) return null;
 	    var selectedGCData = this.selectedGCData();
 	    if (selectedGCData === null) return null;
 
 	    var bucketLabels = selectedGCData[key].bucket_sizes;
-	    var bucketSizes = selectedGCData[key].instance_type_data[instance_type].overall_histogram;
+	    var bucketSizes = selectedGCData[key].instance_type_data[instanceType].overall_histogram;
 	    var labels = ['Bucket', 'Count'];
 	    var data = [];
 	    for (var i = 0; i < bucketSizes.length; i++) {
@@ -21470,7 +21530,7 @@
 	    var timelineOptions = {
 	      isStacked: true,
 	      pointsVisible: true,
-	      pointSize: 3,
+	      pointSize: 7,
 	      hAxis: { title: "Time [ms]" },
 	      vAxis: { title: "Memory consumption [KBytes]" }
 	    };
@@ -21534,7 +21594,7 @@
 	      _react2.default.createElement(
 	        "p",
 	        { style: { clear: "both" } },
-	        "Visualize object stats gathered using ",
+	        "Visualize object stats gathered using",
 	        _react2.default.createElement(
 	          "tt",
 	          null,
@@ -21571,8 +21631,9 @@
 	        _react2.default.createElement(
 	          "p",
 	          null,
-	          "Threshold for single InstanceType: ",
-	          _react2.default.createElement("input", { ref: "threshold", type: "text", value: this.state.threshold, onChange: this.handleThresholdChange }),
+	          "Threshold for single InstanceType:",
+	          _react2.default.createElement("input", { ref: "threshold", type: "text",
+	            value: this.state.threshold, onChange: this.handleThresholdChange }),
 	          ". The threshold determines which values to fold into the 'Other' category."
 	        ),
 	        _react2.default.createElement(_basicCharts.AreaChart, { chartData: this.timelineDataGrouped(),
@@ -21586,12 +21647,12 @@
 	        _react2.default.createElement(
 	          "h2",
 	          null,
+	          "Size Histogram: ",
 	          _react2.default.createElement(
 	            "tt",
 	            null,
 	            this.typeName(this.selectedInstanceType())
-	          ),
-	          " Size Histogram"
+	          )
 	        ),
 	        _react2.default.createElement(
 	          "p",
@@ -21609,6 +21670,13 @@
 	              { style: { textAlign: 'center' } },
 	              "Live"
 	            ),
+	            _react2.default.createElement(
+	              "p",
+	              null,
+	              "Overall memory consumption: ",
+	              this.selectedInstanceTypeData("live").overall / KB,
+	              " KB"
+	            ),
 	            _react2.default.createElement(_basicCharts.BarChart, { chartData: this.instanceTypeSizeData(this.selectedInstanceType(), "live"),
 	              chartOptions: instanceTypeSizeOptions,
 	              chartStyle: { height: instanceTypeSizeHeight, margin: '30px' } })
@@ -21620,6 +21688,13 @@
 	              "h3",
 	              { style: { textAlign: 'center' } },
 	              "Dead"
+	            ),
+	            _react2.default.createElement(
+	              "p",
+	              null,
+	              "Overall memory consumption: ",
+	              this.selectedInstanceTypeData("live").overall / KB,
+	              " KB"
 	            ),
 	            _react2.default.createElement(_basicCharts.BarChart, { chartData: this.instanceTypeSizeData(this.selectedInstanceType(), "dead"),
 	              chartOptions: instanceTypeSizeOptions,
@@ -21763,14 +21838,14 @@
 	                  };
 	                }
 	                if (entry.overall !== 0) {
-	                  var instance_type_name = entry.instance_type_name;
+	                  var instanceTypeName = entry.instance_type_name;
 	                  var id = entry.id;
 	                  var key = entry.key;
 	                  if (!(entry.isolate in keys)) {
 	                    keys[entry.isolate] = new Set();
 	                  }
 	                  keys[entry.isolate].add(key);
-	                  data[entry.isolate].gcs[id][key].instance_type_data[instance_type_name] = {
+	                  data[entry.isolate].gcs[id][key].instance_type_data[instanceTypeName] = {
 	                    overall: entry.overall,
 	                    count: entry.count,
 	                    over_allocated: entry.over_allocated,
@@ -21779,9 +21854,9 @@
 	                  };
 	                  data[entry.isolate].gcs[id][key].overall += entry.overall;
 
-	                  data[entry.isolate].gcs[id][key].non_empty_instance_types.add(instance_type_name);
-	                  data[entry.isolate].gcs[id].non_empty_instance_types.add(instance_type_name);
-	                  data[entry.isolate].non_empty_instance_types.add(instance_type_name);
+	                  data[entry.isolate].gcs[id][key].non_empty_instance_types.add(instanceTypeName);
+	                  data[entry.isolate].gcs[id].non_empty_instance_types.add(instanceTypeName);
+	                  data[entry.isolate].non_empty_instance_types.add(instanceTypeName);
 	                }
 	              }
 	            } else if (entry.type === "bucket_sizes") {
@@ -21821,71 +21896,112 @@
 	          }
 	        }
 
-	        for (var isolate in data) {
-	          for (var gc in data[isolate].gcs) {
-	            var _iteratorNormalCompletion2 = true;
-	            var _didIteratorError2 = false;
-	            var _iteratorError2 = undefined;
+	        var _iteratorNormalCompletion2 = true;
+	        var _didIteratorError2 = false;
+	        var _iteratorError2 = undefined;
+
+	        try {
+	          for (var _iterator2 = Object.keys(data)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+	            var isolate = _step2.value;
+	            var _iteratorNormalCompletion3 = true;
+	            var _didIteratorError3 = false;
+	            var _iteratorError3 = undefined;
 
 	            try {
-	              var _loop = function _loop() {
-	                var key = _step2.value;
+	              for (var _iterator3 = Object.keys(data[isolate].gcs)[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+	                var gc = _step3.value;
+	                var _iteratorNormalCompletion4 = true;
+	                var _didIteratorError4 = false;
+	                var _iteratorError4 = undefined;
 
-	                var dataSet = data[isolate].gcs[gc][key];
-	                // (1) Create a ranked instance type array that sorts instance
-	                // types by memory size (overall).
-	                dataSet.ranked_instance_types = [].concat(_toConsumableArray(dataSet.non_empty_instance_types)).sort(function (a, b) {
-	                  if (dataSet.instance_type_data[a].overall > dataSet.instance_type_data[b].overall) {
-	                    return 1;
-	                  } else if (dataSet.instance_type_data[a].overall < dataSet.instance_type_data[b].overall) {
-	                    return -1;
+	                try {
+	                  var _loop = function _loop() {
+	                    var key = _step4.value;
+
+	                    var dataSet = data[isolate].gcs[gc][key];
+	                    // (1) Create a ranked instance type array that sorts instance
+	                    // types by memory size (overall).
+	                    dataSet.rankedInstanceTypes = [].concat(_toConsumableArray(dataSet.non_empty_instance_types)).sort(function (a, b) {
+	                      if (dataSet.instance_type_data[a].overall > dataSet.instance_type_data[b].overall) {
+	                        return 1;
+	                      } else if (dataSet.instance_type_data[a].overall < dataSet.instance_type_data[b].overall) {
+	                        return -1;
+	                      }
+	                      return 0;
+	                    });
+
+	                    // (2) Create *FIXED_ARRAY_UNKNOWN_SUB_TYPE that accounts for all
+	                    // missing fixed array sub types.
+	                    var fixedArrayData = Object.assign({}, dataSet.instance_type_data.FIXED_ARRAY_TYPE);
+	                    for (var instanceType in dataSet.instance_type_data) {
+	                      if (!instanceType.startsWith("*FIXED_ARRAY")) continue;
+	                      var subtype = dataSet.instance_type_data[instanceType];
+	                      fixedArrayData.count -= subtype.count;
+	                      fixedArrayData.overall -= subtype.overall;
+	                      for (var i = 0; i < fixedArrayData.overall_histogram.length; i++) {
+	                        fixedArrayData.overall_histogram[i] -= subtype.overall_histogram[i];
+	                      }
+	                    }
+
+	                    // Emit log messages for negative values.
+	                    checkNonNegativeProperty(fixedArrayData, "count");
+	                    checkNonNegativeProperty(fixedArrayData, "overall");
+	                    for (var _i = 0; _i < fixedArrayData.overall_histogram.length; _i++) {
+	                      checkNonNegativeProperty(fixedArrayData.overall_histogram, _i);
+	                    }
+
+	                    dataSet.instance_type_data["*FIXED_ARRAY_UNKNOWN_SUB_TYPE"] = fixedArrayData;
+	                    dataSet.non_empty_instance_types.add("*FIXED_ARRAY_UNKNOWN_SUB_TYPE");
+	                  };
+
+	                  for (var _iterator4 = keys[isolate][Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+	                    _loop();
 	                  }
-	                  return 0;
-	                });
-
-	                // (2) Create *FIXED_ARRAY_UNKNOWN_SUB_TYPE that accounts for all
-	                // missing fixed array sub types.
-	                var fixed_array_data = Object.assign({}, dataSet.instance_type_data.FIXED_ARRAY_TYPE);
-	                for (var instance_type in dataSet.instance_type_data) {
-	                  if (!instance_type.startsWith("*FIXED_ARRAY")) continue;
-	                  var subtype = dataSet.instance_type_data[instance_type];
-	                  fixed_array_data.count -= subtype.count;
-	                  fixed_array_data.overall -= subtype.overall;
-	                  for (var i = 0; i < fixed_array_data.overall_histogram.length; i++) {
-	                    fixed_array_data.overall_histogram[i] -= subtype.overall_histogram[i];
+	                } catch (err) {
+	                  _didIteratorError4 = true;
+	                  _iteratorError4 = err;
+	                } finally {
+	                  try {
+	                    if (!_iteratorNormalCompletion4 && _iterator4.return) {
+	                      _iterator4.return();
+	                    }
+	                  } finally {
+	                    if (_didIteratorError4) {
+	                      throw _iteratorError4;
+	                    }
 	                  }
 	                }
-
-	                // Emit log messages for negative values.
-	                checkNonNegativeProperty(fixed_array_data, "count");
-	                checkNonNegativeProperty(fixed_array_data, "overall");
-	                for (var _i = 0; _i < fixed_array_data.overall_histogram.length; _i++) {
-	                  checkNonNegativeProperty(fixed_array_data.overall_histogram, _i);
-	                }
-
-	                dataSet.instance_type_data["*FIXED_ARRAY_UNKNOWN_SUB_TYPE"] = fixed_array_data;
-	                dataSet.non_empty_instance_types.add("*FIXED_ARRAY_UNKNOWN_SUB_TYPE");
-	              };
-
-	              for (var _iterator2 = keys[isolate][Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-	                _loop();
 	              }
 	            } catch (err) {
-	              _didIteratorError2 = true;
-	              _iteratorError2 = err;
+	              _didIteratorError3 = true;
+	              _iteratorError3 = err;
 	            } finally {
 	              try {
-	                if (!_iteratorNormalCompletion2 && _iterator2.return) {
-	                  _iterator2.return();
+	                if (!_iteratorNormalCompletion3 && _iterator3.return) {
+	                  _iterator3.return();
 	                }
 	              } finally {
-	                if (_didIteratorError2) {
-	                  throw _iteratorError2;
+	                if (_didIteratorError3) {
+	                  throw _iteratorError3;
 	                }
 	              }
 	            }
 	          }
+	        } catch (err) {
+	          _didIteratorError2 = true;
+	          _iteratorError2 = err;
+	        } finally {
+	          try {
+	            if (!_iteratorNormalCompletion2 && _iterator2.return) {
+	              _iterator2.return();
+	            }
+	          } finally {
+	            if (_didIteratorError2) {
+	              throw _iteratorError2;
+	            }
+	          }
 	        }
+
 	        console.log(data);
 	        this.handleDone(data, file.name);
 	      }.bind(this);
