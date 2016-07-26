@@ -21136,7 +21136,9 @@
 
 	      selectedIsolate: null,
 	      selectedGC: null,
-	      selectedInstanceType: null
+	      selectedInstanceType: null,
+
+	      showMalloced: false
 	    };
 	  },
 
@@ -21174,7 +21176,9 @@
 
 	      selectedIsolate: firstIsolate,
 	      selectedGC: null,
-	      selectedInstanceType: null
+	      selectedInstanceType: null,
+
+	      showMalloced: false
 	    });
 	  },
 
@@ -21186,7 +21190,9 @@
 
 	      selectedIsolate: e.target.value,
 	      selectedGC: null,
-	      selectedInstanceType: null
+	      selectedInstanceType: null,
+
+	      showMalloced: false
 	    });
 	  },
 
@@ -21265,7 +21271,12 @@
 	    return [labels].concat(dataset);
 	  },
 
-	  timelineDataGrouped: function timelineDataGrouped() {
+	  timelineDataGrouped: function timelineDataGrouped(options) {
+	    if (options === null || options === undefined) {
+	      options = {
+	        showMalloced: false
+	      };
+	    }
 	    var isolateData = this.selectedIsolateData();
 	    if (isolateData === null) return null;
 	    var perGCData = isolateData.gcs;
@@ -21362,7 +21373,11 @@
 	      }
 
 	      dataset[gcCount].push(other);
-	      if (gcCount === 0) labels.push('Other');
+	      if (options.showMalloced) dataset[gcCount].push(perGCData[gc].malloced / KB);
+	      if (gcCount === 0) {
+	        labels.push('Other');
+	        if (options.showMalloced) labels.push('malloced');
+	      }
 	      gcCount++;
 	    }
 	    return [labels].concat(dataset);
@@ -21495,7 +21510,9 @@
 	      data: this.state.data,
 	      threshold: e.target.value,
 	      selectedGC: this.state.selectedGC,
-	      selectedInstanceType: this.state.selectedInstanceType
+	      selectedInstanceType: this.state.selectedInstanceType,
+
+	      showMalloced: false
 	    });
 	  },
 
@@ -21518,6 +21535,19 @@
 	      selectedGC: selected,
 	      selectedInstanceType: b,
 	      selectedIsolate: this.state.selectedIsolate
+	    });
+	  },
+
+	  handleShowMallocedChange: function handleShowMallocedChange(e) {
+	    this.setState({
+	      data: this.state.data,
+	      threshold: this.state.threshold,
+
+	      selectedGC: this.state.selectedGC,
+	      selectedInstanceType: this.state.selectedInstanceType,
+	      selectedIsolate: this.state.selectedIsolate,
+
+	      showMalloced: e.target.checked
 	    });
 	  },
 
@@ -21632,14 +21662,22 @@
 	          "The plot shows the memory consumption for each instance type over time. Each data point corresponds to a sample collected during a major GC. Lines stack, i.e., the top line shows the overall memory consumption. Select a data point to inspect details."
 	        ),
 	        _react2.default.createElement(
-	          "p",
+	          "ul",
 	          null,
-	          "Threshold for single InstanceType:",
-	          _react2.default.createElement("input", { ref: "threshold", type: "text",
-	            value: this.state.threshold, onChange: this.handleThresholdChange }),
-	          ". The threshold determines which values to fold into the 'Other' category."
+	          _react2.default.createElement(
+	            "li",
+	            null,
+	            "InstanceType threshold:",
+	            _react2.default.createElement("input", { ref: "threshold", type: "text", value: this.state.threshold, onChange: this.handleThresholdChange })
+	          ),
+	          _react2.default.createElement(
+	            "li",
+	            null,
+	            "Show malloced memory:",
+	            _react2.default.createElement("input", { type: "checkbox", checked: this.state.showMalloced, onChange: this.handleShowMallocedChange })
+	          )
 	        ),
-	        _react2.default.createElement(_basicCharts.AreaChart, { chartData: this.timelineDataGrouped(),
+	        _react2.default.createElement(_basicCharts.AreaChart, { chartData: this.timelineDataGrouped({ showMalloced: this.state.showMalloced }),
 	          chartStyle: timelineStyle,
 	          chartOptions: timelineOptions,
 	          handleSelection: this.handleSelection })
@@ -21831,6 +21869,7 @@
 	            if (entry.type === "gc_descriptor") {
 	              createEntryIfNeeded(entry);
 	              data[entry.isolate].gcs[entry.id].time = entry.time;
+	              if ("malloced" in entry) data[entry.isolate].gcs[entry.id].malloced = entry.malloced;
 	            } else if (entry.type === "instance_type_data") {
 	              if (entry.id in data[entry.isolate].gcs) {
 	                createEntryIfNeeded(entry);
