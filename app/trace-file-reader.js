@@ -57,15 +57,15 @@ export default React.createClass({
                 };
               }
               if (entry.overall !== 0) {
-                var instance_type_name = entry.instance_type_name;
-                var id = entry.id;
-                var key = entry.key;
+                const instanceTypeName = entry.instance_type_name;
+                const id = entry.id;
+                const key = entry.key;
                 if (!(entry.isolate in keys)) {
                   keys[entry.isolate] = new Set();
                 }
                 keys[entry.isolate].add(key);
                 data[entry.isolate].gcs[id][key]
-                  .instance_type_data[instance_type_name] = {
+                  .instance_type_data[instanceTypeName] = {
                     overall: entry.overall,
                     count: entry.count,
                     over_allocated: entry.over_allocated,
@@ -75,11 +75,11 @@ export default React.createClass({
                 data[entry.isolate].gcs[id][key].overall += entry.overall;
 
                 data[entry.isolate].gcs[id][key].non_empty_instance_types.add(
-                  instance_type_name);
+                  instanceTypeName);
                 data[entry.isolate].gcs[id].non_empty_instance_types.add(
-                  instance_type_name);
+                  instanceTypeName);
                 data[entry.isolate].non_empty_instance_types.add(
-                  instance_type_name);
+                  instanceTypeName);
               }
             }
           } else if (entry.type === "bucket_sizes") {
@@ -106,13 +106,13 @@ export default React.createClass({
           }
         }
 
-        for (const isolate in data) {
-          for (const gc in data[isolate].gcs) {
+        for (const isolate of Object.keys(data)) {
+          for (const gc of Object.keys(data[isolate].gcs)) {
             for (const key of keys[isolate]) {
               const dataSet = data[isolate].gcs[gc][key];
               // (1) Create a ranked instance type array that sorts instance
               // types by memory size (overall).
-              dataSet.ranked_instance_types =
+              dataSet.rankedInstanceTypes =
                 [... dataSet.non_empty_instance_types].sort(function(a, b) {
                   if (dataSet.instance_type_data[a].overall > dataSet.instance_type_data[b].overall) {
                     return 1;
@@ -124,27 +124,27 @@ export default React.createClass({
 
               // (2) Create *FIXED_ARRAY_UNKNOWN_SUB_TYPE that accounts for all
               // missing fixed array sub types.
-              const fixed_array_data = Object.assign({}, dataSet.instance_type_data.FIXED_ARRAY_TYPE);
-              for (const instance_type in dataSet.instance_type_data) {
-                if (!instance_type.startsWith("*FIXED_ARRAY")) continue;
-                const subtype = dataSet.instance_type_data[instance_type];
-                fixed_array_data.count -= subtype.count;
-                fixed_array_data.overall -= subtype.overall;
+              const fixedArrayData = Object.assign({}, dataSet.instance_type_data.FIXED_ARRAY_TYPE);
+              for (const instanceType in dataSet.instance_type_data) {
+                if (!instanceType.startsWith("*FIXED_ARRAY")) continue;
+                const subtype = dataSet.instance_type_data[instanceType];
+                fixedArrayData.count -= subtype.count;
+                fixedArrayData.overall -= subtype.overall;
                 for (let i = 0;
-                     i < fixed_array_data.overall_histogram.length;
+                     i < fixedArrayData.overall_histogram.length;
                      i++) {
-                  fixed_array_data.overall_histogram[i] -= subtype.overall_histogram[i];
+                  fixedArrayData.overall_histogram[i] -= subtype.overall_histogram[i];
                 }
               }
 
               // Emit log messages for negative values.
-              checkNonNegativeProperty(fixed_array_data, "count");
-              checkNonNegativeProperty(fixed_array_data, "overall");
-              for (let i = 0; i < fixed_array_data.overall_histogram.length; i++) {
-                checkNonNegativeProperty(fixed_array_data.overall_histogram, i);
+              checkNonNegativeProperty(fixedArrayData, "count");
+              checkNonNegativeProperty(fixedArrayData, "overall");
+              for (let i = 0; i < fixedArrayData.overall_histogram.length; i++) {
+                checkNonNegativeProperty(fixedArrayData.overall_histogram, i);
               }
 
-              dataSet.instance_type_data["*FIXED_ARRAY_UNKNOWN_SUB_TYPE"] = fixed_array_data;
+              dataSet.instance_type_data["*FIXED_ARRAY_UNKNOWN_SUB_TYPE"] = fixedArrayData;
               dataSet.non_empty_instance_types.add("*FIXED_ARRAY_UNKNOWN_SUB_TYPE");
             }
           }

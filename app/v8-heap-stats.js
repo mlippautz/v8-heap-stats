@@ -1,10 +1,9 @@
 import React from "react";
 
-import TraceFileReader from "./trace-file-reader";
-import {AreaChart, BarChart, PieChart} from "./basic-charts";
+import TraceFileReader from "./trace-file-reader";  // eslint-disable-line no-unused-vars
+import {AreaChart, BarChart, PieChart} from "./basic-charts";  // eslint-disable-line no-unused-vars
 
-let KB = 1024;
-let MB = 1024 * KB;
+const KB = 1024;
 
 export default React.createClass({
   getInitialState: function() {
@@ -19,9 +18,9 @@ export default React.createClass({
   },
 
   handleNewData: function(data) {
-    let first_isolate;
-    for (const isolate in data) {
-      first_isolate = isolate;
+    let firstIsolate;
+    for (const isolate of Object.keys(data)) {
+      firstIsolate = isolate;
       break;
     }
 
@@ -29,7 +28,7 @@ export default React.createClass({
       data: data,
       threshold: this.state.threshold,
 
-      selectedIsolate: first_isolate,
+      selectedIsolate: firstIsolate,
       selectedGC: null,
       selectedInstanceType: null
     });
@@ -53,84 +52,86 @@ export default React.createClass({
   },
 
   timelineData: function() {
-    const isolate_data = this.selectedIsolateData();
-    if (isolate_data === null) return null;
-    const per_gc_data = isolate_data.gcs;
+    const isolateData = this.selectedIsolateData();
+    if (isolateData === null) return null;
+    const perGCData = isolateData.gcs;
     const dataset = [];
     const labels = ['Time [ms]'];
-    let gc_count = 0;
-    for (let gc in per_gc_data) {
-      dataset[gc_count] = [per_gc_data[gc].time];
-      for (let instance_type of isolate_data.non_empty_instance_types) {
-        if (instance_type.startsWith("*")) continue;
+    let gcCount = 0;
+    for (let gc of Object.keys(perGCData)) {
+      dataset[gcCount] = [perGCData[gc].time];
+      for (let instanceType of isolateData.non_empty_instance_types) {
+        if (instanceType.startsWith("*")) continue;
 
-        if (gc_count === 0) labels.push(instance_type);
+        if (gcCount === 0) labels.push(instanceType);
 
-        var instance_type_data = per_gc_data[gc].live.instance_type_data;
-        if (instance_type in instance_type_data) {
-          dataset[gc_count].push(instance_type_data[instance_type].overall);
+        const instanceTypeData = perGCData[gc].live.instance_type_data;
+        if (instanceType in instanceTypeData) {
+          dataset[gcCount].push(instanceTypeData[instanceType].overall);
         } else {
-          dataset[gc_count].push(0);
+          dataset[gcCount].push(0);
         }
       }
-      gc_count++;
+      gcCount++;
     }
     return [labels, ...dataset];
   },
 
   timelineDataGrouped: function() {
-    const isolate_data = this.selectedIsolateData();
-    if (isolate_data === null) return null;
-    const per_gc_data = isolate_data.gcs;
+    const isolateData = this.selectedIsolateData();
+    if (isolateData === null) return null;
+    const perGCData = isolateData.gcs;
     let dataset = [];
-    let labels = ['Time [ms]'];
+    const labels = ['Time [ms]'];
     let gcCount = 0;
 
     let threshold = parseFloat(this.state.threshold);
     if (isNaN(threshold))
       threshold = 0;
 
-    let interesting_instance_types_array = [];
-    let interesting_instance_types = new Set();
-    let non_interesting_instance_types = new Set();
-    for (let gc in per_gc_data) {
+    const interestingInstanceTypesArray = [];
+    const interestingInstanceTypes = new Set();
+    const nonInterestingInstanceTypes = new Set();
+    for (let gc in perGCData) {
       if (gcCount === 0) {
-        for (let key in per_gc_data[gc].live.ranked_instance_types) {
-          let instance_type = per_gc_data[gc].live.ranked_instance_types[key];
-          if (instance_type.startsWith("*")) continue;
-          var instance_type_data = per_gc_data[gc].live.instance_type_data;
-          if ((instance_type in instance_type_data) &&
-              (instance_type_data[instance_type].overall > (per_gc_data[gc].live.overall * threshold))) {
-            interesting_instance_types_array.push(instance_type);
-            interesting_instance_types.add(instance_type);
+        for (let i = 0;
+             i < perGCData[gc].live.rankedInstanceTypes.length;
+             i++) {
+          const instanceType = perGCData[gc].live.rankedInstanceTypes[i];
+          if (instanceType.startsWith("*")) continue;
+          let instanceTypeData = perGCData[gc].live.instance_type_data;
+          if ((instanceType in instanceTypeData) &&
+              (instanceTypeData[instanceType].overall > (perGCData[gc].live.overall * threshold))) {
+            interestingInstanceTypesArray.push(instanceType);
+            interestingInstanceTypes.add(instanceType);
           }
         }
 
-        for (let instance_type of isolate_data.non_empty_instance_types) {
-          if (instance_type.startsWith("*")) continue;
-          if (!interesting_instance_types.has(instance_type)) {
-            non_interesting_instance_types.add(instance_type);
+        for (let instanceType of isolateData.non_empty_instance_types) {
+          if (instanceType.startsWith("*")) continue;
+          if (!interestingInstanceTypes.has(instanceType)) {
+            nonInterestingInstanceTypes.add(instanceType);
           }
         }
       }
 
       let other = 0;
-      dataset[gcCount] = [per_gc_data[gc].time];
-      for (let key in interesting_instance_types_array) {
-        let instance_type = interesting_instance_types_array[key];
-        if (gcCount === 0) labels.push(instance_type);
-        var instance_type_data = per_gc_data[gc].live.instance_type_data;
-        if (instance_type in instance_type_data) {
-          dataset[gcCount].push(instance_type_data[instance_type].overall / KB);
+      dataset[gcCount] = [perGCData[gc].time];
+      for (let i = 0; i < interestingInstanceTypesArray.length; i++) {
+        const instanceType = interestingInstanceTypesArray[i];
+        if (gcCount === 0) labels.push(instanceType);
+        const instanceTypeData = perGCData[gc].live.instance_type_data;
+        if (instanceType in instanceTypeData) {
+          dataset[gcCount].push(instanceTypeData[instanceType].overall / KB);
         } else {
           dataset[gcCount].push(0);
         }
       }
 
-      for (let instance_type of non_interesting_instance_types) {
-        var instance_type_data = per_gc_data[gc].live.instance_type_data;
-        if (instance_type in instance_type_data) {
-          other += instance_type_data[instance_type].overall/KB;
+      for (let instanceType of nonInterestingInstanceTypes) {
+        const instanceTypeData = perGCData[gc].live.instance_type_data;
+        if (instanceType in instanceTypeData) {
+          other += instanceTypeData[instanceType].overall / KB;
         }
       }
       dataset[gcCount].push(other);
@@ -140,15 +141,15 @@ export default React.createClass({
     return [labels, ...dataset];
   },
 
-  _rawData: function(key, header, selector, name_callback, value_callback) {
+  _rawData: function(key, header, selector, nameCallback, valueCallback) {
     const gcData = this.selectedGCData();
     if (gcData === null) return null;
 
     const dataset = [['InstanceType', ...header]];
     for (let entry of gcData[key].non_empty_instance_types) {
       if (selector(entry)) {
-        dataset.push([name_callback(entry),
-                      ...value_callback(gcData[key].instance_type_data[entry])]);
+        dataset.push([nameCallback(entry),
+                      ...valueCallback(gcData[key].instance_type_data[entry])]);
       }
     }
     return dataset;
@@ -166,10 +167,22 @@ export default React.createClass({
     return this.state.selectedInstanceType;
   },
 
+  selectedInstanceTypeData: function(key) {
+    const emptyResponse = {
+      overall: 0
+    };
+
+    const instanceType = this.selectedInstanceType();
+    const gcData = this.selectedGCData();
+    if (gcData === null || instanceType === null) return emptyResponse;
+    if (!(instanceType in gcData[key].instance_type_data)) return emptyResponse;
+    return gcData[key].instance_type_data[instanceType];
+  },
 
   fixedArraySubTypeName: function(fullName) {
     if (fullName === null) return null;
-    return fullName.slice("*FIXED_ARRAY_".length).slice(0, -("_SUB_TYPE".length));
+    return fullName.slice("*FIXED_ARRAY_".length)
+                   .slice(0, -("_SUB_TYPE".length));
   },
 
   typeName: function(fullName) {
@@ -203,18 +216,20 @@ export default React.createClass({
       ['Payload [Bytes]', 'Overhead [Bytes]'],
       name => name.startsWith("*FIXED_ARRAY_"),
       name => this.fixedArraySubTypeName(name),
-      value => value === undefined ? [0, 0] : [value.overall - value.over_allocated, value.over_allocated]
+      value => value === undefined ?
+        [0, 0] :
+        [value.overall - value.over_allocated, value.over_allocated]
       );
   },
 
-  instanceTypeSizeData: function(instance_type, key) {
-    if (instance_type === null) return null;
+  instanceTypeSizeData: function(instanceType, key) {
+    if (instanceType === null) return null;
     const selectedGCData = this.selectedGCData();
     if (selectedGCData === null) return null;
 
     const bucketLabels = selectedGCData[key].bucket_sizes;
     const bucketSizes = selectedGCData[key]
-      .instance_type_data[instance_type].overall_histogram;
+      .instance_type_data[instanceType].overall_histogram;
     const labels = ['Bucket', 'Count'];
     const data = [];
     for (let i = 0; i < bucketSizes.length; i++) {
@@ -263,7 +278,7 @@ export default React.createClass({
     const timelineOptions = {
       isStacked: true,
       pointsVisible: true,
-      pointSize: 3,
+      pointSize: 7,
       hAxis: {title: "Time [ms]"},
       vAxis: {title: "Memory consumption [KBytes]"}
     };
@@ -317,7 +332,8 @@ export default React.createClass({
         <h1>V8 Heap Statistics</h1>
 
         <p style={{clear: "both"}}>
-          Visualize object stats gathered using <tt>--trace-gc-object-stats</tt>.
+          Visualize object stats gathered using
+          <tt>--trace-gc-object-stats</tt>.
         </p>
 
         <p>
@@ -335,13 +351,16 @@ export default React.createClass({
           Timeline
         </h2>
         <p>
-          The plot shows the memory consumption for each instance type over time. Each data point corresponds to a sample
-          collected during a major GC. Lines stack, i.e., the top line shows the overall memory consumption.
-          Select a data point to inspect details.
+The plot shows the memory consumption for each instance type over time. Each
+data point corresponds to a sample collected during a major GC. Lines stack,
+i.e., the top line shows the overall memory consumption. Select a data point
+to inspect details.
         </p>
         <p>
-          Threshold for single InstanceType: <input ref="threshold" type="text" value={this.state.threshold} onChange={this.handleThresholdChange} />.
-          The threshold determines which values to fold into the 'Other' category.
+Threshold for single InstanceType:
+<input ref="threshold" type="text"
+  value={this.state.threshold} onChange={this.handleThresholdChange} />.
+The threshold determines which values to fold into the 'Other' category.
         </p>
         <AreaChart chartData={this.timelineDataGrouped()}
                    chartStyle={timelineStyle}
@@ -350,19 +369,25 @@ export default React.createClass({
         </div>
 
         <div style={{display: this.selectedInstanceType() === null ? "none" : "inline"}}>
-          <h2><tt>{this.typeName(this.selectedInstanceType())}</tt> Size Histogram</h2>
+          <h2>Size Histogram: <tt>{this.typeName(this.selectedInstanceType())}</tt></h2>
           <p>
             Plot shows the size histogram for the selected instance type.
           </p>
           <div ref="instance_type_size_distribution" style={null}>
             <div style={{width: '50%', float: 'left'}}>
               <h3 style={{textAlign: 'center'}}>Live</h3>
+              <p>
+                Overall memory consumption: {this.selectedInstanceTypeData("live").overall / KB} KB
+              </p>
               <BarChart chartData={this.instanceTypeSizeData(this.selectedInstanceType(), "live")}
                         chartOptions={instanceTypeSizeOptions}
                         chartStyle={{height: instanceTypeSizeHeight, margin: '30px'}} />
             </div>
             <div style={{width: '50%', float: 'left'}}>
               <h3 style={{textAlign: 'center'}}>Dead</h3>
+              <p>
+                Overall memory consumption: {this.selectedInstanceTypeData("live").overall / KB} KB
+              </p>
               <BarChart chartData={this.instanceTypeSizeData(this.selectedInstanceType(), "dead")}
                         chartOptions={instanceTypeSizeOptions}
                         chartStyle={{height: instanceTypeSizeHeight, margin: '30px'}} />
@@ -374,7 +399,7 @@ export default React.createClass({
         <h2>InstanceType Distribution</h2>
         <div ref="instance_type_distribution" style={instanceTypeDistributionStyle}>
           <PieChart chartData={this.instanceTypeData("live")}
-                    chartOptions={null} 
+                    chartOptions={null}
                     chartStyle={instanceTypeDistributionChartStyle} />
           <PieChart chartData={this.instanceTypeData("dead")}
                     chartOptions={null}
@@ -399,7 +424,6 @@ export default React.createClass({
                     chartStyle={fixedArrayOverheadChartStyle} />
         </div>
         </div>
-
 
       </div>
     );

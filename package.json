@@ -31,7 +31,11 @@
     "url": "git://github.com/mlippautz/v8-heap-stats.git"
   },
   "eslintConfig": {
-    "extends": "google"
+    "extends": "google",
+    "env": {
+      "browser": true,
+      "node": true
+    }
   },
   "author": "V8 project authors",
   "license": "SEE LICENSE",
