@@ -1,7 +1,8 @@
 import React from "react";
 
 import TraceFileReader from "./trace-file-reader";  // eslint-disable-line no-unused-vars
-import {AreaChart, BarChart, PieChart} from "./basic-charts";  // eslint-disable-line no-unused-vars
+import {AreaChart, BarChart, LineChart, PieChart} from "./basic-charts";  // eslint-disable-line no-unused-vars
+import {CodeDetails, FixedArrayDetails} from "./components";  // eslint-disable-line no-unused-vars
 
 const KB = 1024;
 
@@ -83,12 +84,22 @@ export default React.createClass({
     return [labels, ...dataset];
   },
 
-  timelineDataGrouped: function(options) {
-    if (options === null || options === undefined) {
-      options = {
-        showMalloced: false
-      };
+  mallocedData: function() {
+    const isolateData = this.selectedIsolateData();
+    if (isolateData === null) return null;
+    const timesAsDoubles = Object.keys(isolateData.samples.malloced)
+                               .map(e => parseFloat(e))
+                               .sort((a, b) => a - b);
+    const dataset = [];
+    for (let i = 0; i < timesAsDoubles.length; i++) {
+      const time = timesAsDoubles[i];
+      dataset.push([time, isolateData.samples.malloced[time] / KB]);
     }
+    const labels = ['Time [ms]', 'malloced'];
+    return [labels, ... dataset];
+  },
+
+  timelineDataGrouped: function() {
     const isolateData = this.selectedIsolateData();
     if (isolateData === null) return null;
     const perGCData = isolateData.gcs;
@@ -146,10 +157,8 @@ export default React.createClass({
         }
       }
       dataset[gcCount].push(other);
-      if (options.showMalloced) dataset[gcCount].push(perGCData[gc].malloced / KB);
       if (gcCount === 0) {
         labels.push('Other');
-        if (options.showMalloced) labels.push('malloced');
       }
       gcCount++;
     }
@@ -194,12 +203,6 @@ export default React.createClass({
     return gcData[key].instance_type_data[instanceType];
   },
 
-  fixedArraySubTypeName: function(fullName) {
-    if (fullName === null) return null;
-    return fullName.slice("*FIXED_ARRAY_".length)
-                   .slice(0, -("_SUB_TYPE".length));
-  },
-
   typeName: function(fullName) {
     if (fullName === null) return null;
     return fullName.slice(0, -("_TYPE".length));
@@ -213,28 +216,6 @@ export default React.createClass({
       name => this.typeName(name),
       value => value === undefined ? 0 : [value.overall]);
     return ds;
-  },
-
-  fixedArrayData: function(key) {
-    let ds = this._rawData(
-      key,
-      ['Memory consumption [Bytes]'],
-      name => name.startsWith("*FIXED_ARRAY_"),
-      name => this.fixedArraySubTypeName(name),
-      value => value === undefined ? 0 : [value.overall]);
-    return ds;
-  },
-
-  fixedArrayOverheadData: function(key) {
-    return this._rawData(
-      key,
-      ['Payload [Bytes]', 'Overhead [Bytes]'],
-      name => name.startsWith("*FIXED_ARRAY_"),
-      name => this.fixedArraySubTypeName(name),
-      value => value === undefined ?
-        [0, 0] :
-        [value.overall - value.over_allocated, value.over_allocated]
-      );
   },
 
   instanceTypeSizeData: function(instanceType, key) {
@@ -309,43 +290,22 @@ export default React.createClass({
       isStacked: true,
       pointsVisible: true,
       pointSize: 7,
-      hAxis: {title: "Time [ms]"},
+      hAxis: {
+        title: "Time [ms]",
+        minValue: this.selectedIsolateData() === null ? 0 : this.selectedIsolateData().start,
+        maxValue: this.selectedIsolateData() === null ? 0 : this.selectedIsolateData().end
+      },
       vAxis: {title: "Memory consumption [KBytes]"}
     };
-    const instanceTypeDistributionStyle = {
-      height: "600px",
-      width: "100%"
-    };
-    const instanceTypeDistributionChartStyle = {
-      width: "50%",
-      height: "600px",
-      float: "left"
-    };
-    const fixedArrayDetailsStyle = {
-      display: this.selectedInstanceType() === "FIXED_ARRAY_TYPE" ?
-        "inline" : "none"
-    };
-    const fixedArrayOverheadStyle = {
-      height: "600px",
-      width: "100%"
-    };
-    const fixedArrayOverheadChartStyle = {
-      width: "50%",
-      height: "600px",
-      float: "left"
-    };
-    const fixedArrayOverheadOptions = {
-      vAxis: {
-        textStyle: {fontSize: 10}
+    const mallocedOptions = {
+      pointsVisible: false,
+      hAxis: {
+        ticks: [],
+        minValue: this.selectedIsolateData() === null ? 0 : this.selectedIsolateData().start,
+        maxValue: this.selectedIsolateData() === null ? 0 : this.selectedIsolateData().end
       },
-      isStacked: true,
-      bars: 'horizontal',
-      series: {
-        0: {color: '#3366CC'},
-        1: {color: '#DC3912'}
-      }
+      vAxis: {title: "Memory consumption [KBytes]"}
     };
-
     const instanceTypeSizeOptions = {
       bars: 'vertical',
       legend: {position: 'none'}
@@ -400,7 +360,15 @@ Show malloced memory:
 <input type="checkbox" checked={this.state.showMalloced} onChange={this.handleShowMallocedChange} />
           </li>
         </ul>
-        <AreaChart chartData={this.timelineDataGrouped({showMalloced: this.state.showMalloced})}
+
+        <div style={{display: this.state.showMalloced ? "inline" : "none"}} >
+        <LineChart ref="mallocedLineChart"
+                   chartData={this.mallocedData()}
+                   chartStyle={timelineStyle}
+                   chartOptions={mallocedOptions} />
+        </div>
+        <AreaChart ref="timelineChart"
+                   chartData={this.timelineDataGrouped()}
                    chartStyle={timelineStyle}
                    chartOptions={timelineOptions}
                    handleSelection={this.handleSelection} />
@@ -433,44 +401,13 @@ Show malloced memory:
           </div>
         </div>
 
-        <div style={{display: this.selectedGCData() === null ? "none" : "inline"}}>
-          <div style={fixedArrayDetailsStyle} >
-            <h2>FixedArray Distribution</h2>
-            <div ref="fixed_array_distribution" style={instanceTypeDistributionStyle}>
-              <PieChart chartData={this.fixedArrayData("live")}
-                        chartOptions={null}
-                        chartStyle={instanceTypeDistributionChartStyle} />
-              <PieChart chartData={this.fixedArrayData("dead")}
-                        chartOptions={null}
-                        chartStyle={instanceTypeDistributionChartStyle} />
-            </div>
-            <h2>FixedArray Overhead</h2>
-            <div ref="fixed_array_overhead" style={fixedArrayOverheadStyle}>
-              <BarChart chartData={this.fixedArrayOverheadData("live")}
-                        chartOptions={fixedArrayOverheadOptions}
-                        chartStyle={fixedArrayOverheadChartStyle} />
-              <BarChart chartData={this.fixedArrayOverheadData("dead")}
-                        chartOptions={fixedArrayOverheadOptions}
-                        chartStyle={fixedArrayOverheadChartStyle} />
-            </div>
-          </div>
-        </div>
+        <FixedArrayDetails show={this.selectedInstanceType() === "FIXED_ARRAY_TYPE"}
+                           data={this.selectedGCData()} />
+
+        <CodeDetails show={this.selectedInstanceType() === "CODE_TYPE"}
+                     data={this.selectedGCData()} />
 
       </div>
     );
-
-    /* Unused:
-
-        <h2>InstanceType Distribution</h2>
-        <div ref="instance_type_distribution" style={instanceTypeDistributionStyle}>
-          <PieChart chartData={this.instanceTypeData("live")}
-                    chartOptions={null}
-                    chartStyle={instanceTypeDistributionChartStyle} />
-          <PieChart chartData={this.instanceTypeData("dead")}
-                    chartOptions={null}
-                    chartStyle={instanceTypeDistributionChartStyle} />
-        </div>
-
-    */
   }
 });

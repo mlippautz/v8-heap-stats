@@ -29,10 +29,15 @@ export default React.createClass({
           if (!(entry.isolate in data)) {
             data[entry.isolate] = {
               non_empty_instance_types: new Set(),
-              gcs: {}
+              gcs: {},
+              samples: {
+                malloced: {}
+              },
+              start: null,
+              end: null
             };
           }
-          if (!(entry.id in data[entry.isolate].gcs)) {
+          if (("id" in entry) && !(entry.id in data[entry.isolate].gcs)) {
             data[entry.isolate].gcs[entry.id] = {
               non_empty_instance_types: new Set()
             };
@@ -42,10 +47,20 @@ export default React.createClass({
         for (var entry of contents) {
           if (entry === null) continue;
           if (entry.type === undefined) continue;
-
-          if (entry.type === "gc_descriptor") {
+          if (entry.type === "malloced") {
+            createEntryIfNeeded(entry);
+            data[entry.isolate].samples.malloced[entry.time] = entry.value;
+            if (entry.time > data[entry.isolate].end)
+              data[entry.isolate].end = entry.time;
+            if (data[entry.isolate].start === null)
+              data[entry.isolate].start = entry.time;
+          } else if (entry.type === "gc_descriptor") {
             createEntryIfNeeded(entry);
             data[entry.isolate].gcs[entry.id].time = entry.time;
+            if (entry.time > data[entry.isolate].end)
+              data[entry.isolate].end = entry.time;
+            if (data[entry.isolate].start === null)
+              data[entry.isolate].start = entry.time;
             if ("malloced" in entry)
               data[entry.isolate].gcs[entry.id].malloced = entry.malloced;
           } else if (entry.type === "instance_type_data") {
@@ -58,24 +73,24 @@ export default React.createClass({
                   overall: 0
                 };
               }
-              if (entry.overall !== 0) {
-                const instanceTypeName = entry.instance_type_name;
-                const id = entry.id;
-                const key = entry.key;
-                if (!(entry.isolate in keys)) {
-                  keys[entry.isolate] = new Set();
-                }
-                keys[entry.isolate].add(key);
-                data[entry.isolate].gcs[id][key]
-                  .instance_type_data[instanceTypeName] = {
-                    overall: entry.overall,
-                    count: entry.count,
-                    over_allocated: entry.over_allocated,
-                    overall_histogram: entry.histogram,
-                    over_allocated_histogram: entry.over_allocated_histogram
-                  };
-                data[entry.isolate].gcs[id][key].overall += entry.overall;
+              const instanceTypeName = entry.instance_type_name;
+              const id = entry.id;
+              const key = entry.key;
+              if (!(entry.isolate in keys)) {
+                keys[entry.isolate] = new Set();
+              }
+              keys[entry.isolate].add(key);
+              data[entry.isolate].gcs[id][key]
+                .instance_type_data[instanceTypeName] = {
+                  overall: entry.overall,
+                  count: entry.count,
+                  over_allocated: entry.over_allocated,
+                  overall_histogram: entry.histogram,
+                  over_allocated_histogram: entry.over_allocated_histogram
+                };
+              data[entry.isolate].gcs[id][key].overall += entry.overall;
 
+              if (entry.overall !== 0) {
                 data[entry.isolate].gcs[id][key].non_empty_instance_types.add(
                   instanceTypeName);
                 data[entry.isolate].gcs[id].non_empty_instance_types.add(
