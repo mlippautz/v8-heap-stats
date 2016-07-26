@@ -390,7 +390,7 @@ The threshold determines which values to fold into the 'Other' category.
             <div style={{width: '50%', float: 'left'}}>
               <h3 style={{textAlign: 'center'}}>Dead</h3>
               <p>
-                Overall memory consumption: {this.selectedInstanceTypeData("live").overall / KB} KB
+                Overall memory consumption: {this.selectedInstanceTypeData("dead").overall / KB} KB
               </p>
               <BarChart chartData={this.instanceTypeSizeData(this.selectedInstanceType(), "dead")}
                         chartOptions={instanceTypeSizeOptions}
