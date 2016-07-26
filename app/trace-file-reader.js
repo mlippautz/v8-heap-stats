@@ -46,6 +46,8 @@ export default React.createClass({
           if (entry.type === "gc_descriptor") {
             createEntryIfNeeded(entry);
             data[entry.isolate].gcs[entry.id].time = entry.time;
+            if ("malloced" in entry)
+              data[entry.isolate].gcs[entry.id].malloced = entry.malloced;
           } else if (entry.type === "instance_type_data") {
             if (entry.id in data[entry.isolate].gcs) {
               createEntryIfNeeded(entry);

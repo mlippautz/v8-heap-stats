@@ -13,7 +13,9 @@ export default React.createClass({
 
       selectedIsolate: null,
       selectedGC: null,
-      selectedInstanceType: null
+      selectedInstanceType: null,
+
+      showMalloced: false
     };
   },
 
@@ -30,7 +32,9 @@ export default React.createClass({
 
       selectedIsolate: firstIsolate,
       selectedGC: null,
-      selectedInstanceType: null
+      selectedInstanceType: null,
+
+      showMalloced: false
     });
   },
 
@@ -42,7 +46,9 @@ export default React.createClass({
 
       selectedIsolate: e.target.value,
       selectedGC: null,
-      selectedInstanceType: null
+      selectedInstanceType: null,
+
+      showMalloced: false
     });
   },
 
@@ -77,7 +83,12 @@ export default React.createClass({
     return [labels, ...dataset];
   },
 
-  timelineDataGrouped: function() {
+  timelineDataGrouped: function(options) {
+    if (options === null || options === undefined) {
+      options = {
+        showMalloced: false
+      };
+    }
     const isolateData = this.selectedIsolateData();
     if (isolateData === null) return null;
     const perGCData = isolateData.gcs;
@@ -135,7 +146,11 @@ export default React.createClass({
         }
       }
       dataset[gcCount].push(other);
-      if (gcCount === 0) labels.push('Other');
+      if (options.showMalloced) dataset[gcCount].push(perGCData[gc].malloced / KB);
+      if (gcCount === 0) {
+        labels.push('Other');
+        if (options.showMalloced) labels.push('malloced');
+      }
       gcCount++;
     }
     return [labels, ...dataset];
@@ -243,7 +258,9 @@ export default React.createClass({
       data: this.state.data,
       threshold: e.target.value,
       selectedGC: this.state.selectedGC,
-      selectedInstanceType: this.state.selectedInstanceType
+      selectedInstanceType: this.state.selectedInstanceType,
+
+      showMalloced: false
     });
   },
 
@@ -266,6 +283,19 @@ export default React.createClass({
       selectedGC: selected,
       selectedInstanceType: b,
       selectedIsolate: this.state.selectedIsolate
+    });
+  },
+
+  handleShowMallocedChange: function(e) {
+    this.setState({
+      data: this.state.data,
+      threshold: this.state.threshold,
+
+      selectedGC: this.state.selectedGC,
+      selectedInstanceType: this.state.selectedInstanceType,
+      selectedIsolate: this.state.selectedIsolate,
+
+      showMalloced: e.target.checked
     });
   },
 
@@ -360,13 +390,17 @@ data point corresponds to a sample collected during a major GC. Lines stack,
 i.e., the top line shows the overall memory consumption. Select a data point
 to inspect details.
         </p>
-        <p>
-Threshold for single InstanceType:
-<input ref="threshold" type="text"
-  value={this.state.threshold} onChange={this.handleThresholdChange} />.
-The threshold determines which values to fold into the 'Other' category.
-        </p>
-        <AreaChart chartData={this.timelineDataGrouped()}
+        <ul>
+          <li>
+InstanceType threshold:
+<input ref="threshold" type="text" value={this.state.threshold} onChange={this.handleThresholdChange} />
+          </li>
+          <li>
+Show malloced memory:
+<input type="checkbox" checked={this.state.showMalloced} onChange={this.handleShowMallocedChange} />
+          </li>
+        </ul>
+        <AreaChart chartData={this.timelineDataGrouped({showMalloced: this.state.showMalloced})}
                    chartStyle={timelineStyle}
                    chartOptions={timelineOptions}
                    handleSelection={this.handleSelection} />
