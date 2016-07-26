@@ -21696,7 +21696,7 @@
 	              "p",
 	              null,
 	              "Overall memory consumption: ",
-	              this.selectedInstanceTypeData("live").overall / KB,
+	              this.selectedInstanceTypeData("dead").overall / KB,
 	              " KB"
 	            ),
 	            _react2.default.createElement(_basicCharts.BarChart, { chartData: this.instanceTypeSizeData(this.selectedInstanceType(), "dead"),
