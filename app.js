@@ -21543,6 +21543,9 @@
 	      height: "600px",
 	      float: "left"
 	    };
+	    var fixedArrayDetailsStyle = {
+	      display: this.selectedInstanceType() === "FIXED_ARRAY_TYPE" ? "inline" : "none"
+	    };
 	    var fixedArrayOverheadStyle = {
 	      height: "600px",
 	      width: "100%"
@@ -21706,52 +21709,53 @@
 	        "div",
 	        { style: { display: this.selectedGCData() === null ? "none" : "inline" } },
 	        _react2.default.createElement(
-	          "h2",
-	          null,
-	          "InstanceType Distribution"
-	        ),
-	        _react2.default.createElement(
 	          "div",
-	          { ref: "instance_type_distribution", style: instanceTypeDistributionStyle },
-	          _react2.default.createElement(_basicCharts.PieChart, { chartData: this.instanceTypeData("live"),
-	            chartOptions: null,
-	            chartStyle: instanceTypeDistributionChartStyle }),
-	          _react2.default.createElement(_basicCharts.PieChart, { chartData: this.instanceTypeData("dead"),
-	            chartOptions: null,
-	            chartStyle: instanceTypeDistributionChartStyle })
-	        ),
-	        _react2.default.createElement(
-	          "h2",
-	          null,
-	          "FixedArray Distribution"
-	        ),
-	        _react2.default.createElement(
-	          "div",
-	          { ref: "fixed_array_distribution", style: instanceTypeDistributionStyle },
-	          _react2.default.createElement(_basicCharts.PieChart, { chartData: this.fixedArrayData("live"),
-	            chartOptions: null,
-	            chartStyle: instanceTypeDistributionChartStyle }),
-	          _react2.default.createElement(_basicCharts.PieChart, { chartData: this.fixedArrayData("dead"),
-	            chartOptions: null,
-	            chartStyle: instanceTypeDistributionChartStyle })
-	        ),
-	        _react2.default.createElement(
-	          "h2",
-	          null,
-	          "FixedArray Overhead"
-	        ),
-	        _react2.default.createElement(
-	          "div",
-	          { ref: "fixed_array_overhead", style: fixedArrayOverheadStyle },
-	          _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadData("live"),
-	            chartOptions: fixedArrayOverheadOptions,
-	            chartStyle: fixedArrayOverheadChartStyle }),
-	          _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadData("dead"),
-	            chartOptions: fixedArrayOverheadOptions,
-	            chartStyle: fixedArrayOverheadChartStyle })
+	          { style: fixedArrayDetailsStyle },
+	          _react2.default.createElement(
+	            "h2",
+	            null,
+	            "FixedArray Distribution"
+	          ),
+	          _react2.default.createElement(
+	            "div",
+	            { ref: "fixed_array_distribution", style: instanceTypeDistributionStyle },
+	            _react2.default.createElement(_basicCharts.PieChart, { chartData: this.fixedArrayData("live"),
+	              chartOptions: null,
+	              chartStyle: instanceTypeDistributionChartStyle }),
+	            _react2.default.createElement(_basicCharts.PieChart, { chartData: this.fixedArrayData("dead"),
+	              chartOptions: null,
+	              chartStyle: instanceTypeDistributionChartStyle })
+	          ),
+	          _react2.default.createElement(
+	            "h2",
+	            null,
+	            "FixedArray Overhead"
+	          ),
+	          _react2.default.createElement(
+	            "div",
+	            { ref: "fixed_array_overhead", style: fixedArrayOverheadStyle },
+	            _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadData("live"),
+	              chartOptions: fixedArrayOverheadOptions,
+	              chartStyle: fixedArrayOverheadChartStyle }),
+	            _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadData("dead"),
+	              chartOptions: fixedArrayOverheadOptions,
+	              chartStyle: fixedArrayOverheadChartStyle })
+	          )
 	        )
 	      )
 	    );
+
+	    /* Unused:
+	         <h2>InstanceType Distribution</h2>
+	        <div ref="instance_type_distribution" style={instanceTypeDistributionStyle}>
+	          <PieChart chartData={this.instanceTypeData("live")}
+	                    chartOptions={null}
+	                    chartStyle={instanceTypeDistributionChartStyle} />
+	          <PieChart chartData={this.instanceTypeData("dead")}
+	                    chartOptions={null}
+	                    chartStyle={instanceTypeDistributionChartStyle} />
+	        </div>
+	     */
 	  }
 	});
 
