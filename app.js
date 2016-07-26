@@ -21117,9 +21117,12 @@
 
 	var _basicCharts = __webpack_require__(174);
 
+	var _components = __webpack_require__(175);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } } // eslint-disable-line no-unused-vars
+	// eslint-disable-line no-unused-vars
 
 
 	// eslint-disable-line no-unused-vars
@@ -21271,12 +21274,24 @@
 	    return [labels].concat(dataset);
 	  },
 
-	  timelineDataGrouped: function timelineDataGrouped(options) {
-	    if (options === null || options === undefined) {
-	      options = {
-	        showMalloced: false
-	      };
+	  mallocedData: function mallocedData() {
+	    var isolateData = this.selectedIsolateData();
+	    if (isolateData === null) return null;
+	    var timesAsDoubles = Object.keys(isolateData.samples.malloced).map(function (e) {
+	      return parseFloat(e);
+	    }).sort(function (a, b) {
+	      return a - b;
+	    });
+	    var dataset = [];
+	    for (var i = 0; i < timesAsDoubles.length; i++) {
+	      var time = timesAsDoubles[i];
+	      dataset.push([time, isolateData.samples.malloced[time] / KB]);
 	    }
+	    var labels = ['Time [ms]', 'malloced'];
+	    return [labels].concat(dataset);
+	  },
+
+	  timelineDataGrouped: function timelineDataGrouped() {
 	    var isolateData = this.selectedIsolateData();
 	    if (isolateData === null) return null;
 	    var perGCData = isolateData.gcs;
@@ -21373,10 +21388,8 @@
 	      }
 
 	      dataset[gcCount].push(other);
-	      if (options.showMalloced) dataset[gcCount].push(perGCData[gc].malloced / KB);
 	      if (gcCount === 0) {
 	        labels.push('Other');
-	        if (options.showMalloced) labels.push('malloced');
 	      }
 	      gcCount++;
 	    }
@@ -21442,11 +21455,6 @@
 	    return gcData[key].instance_type_data[instanceType];
 	  },
 
-	  fixedArraySubTypeName: function fixedArraySubTypeName(fullName) {
-	    if (fullName === null) return null;
-	    return fullName.slice("*FIXED_ARRAY_".length).slice(0, -"_SUB_TYPE".length);
-	  },
-
 	  typeName: function typeName(fullName) {
 	    if (fullName === null) return null;
 	    return fullName.slice(0, -"_TYPE".length);
@@ -21463,31 +21471,6 @@
 	      return value === undefined ? 0 : [value.overall];
 	    });
 	    return ds;
-	  },
-
-	  fixedArrayData: function fixedArrayData(key) {
-	    var _this2 = this;
-
-	    var ds = this._rawData(key, ['Memory consumption [Bytes]'], function (name) {
-	      return name.startsWith("*FIXED_ARRAY_");
-	    }, function (name) {
-	      return _this2.fixedArraySubTypeName(name);
-	    }, function (value) {
-	      return value === undefined ? 0 : [value.overall];
-	    });
-	    return ds;
-	  },
-
-	  fixedArrayOverheadData: function fixedArrayOverheadData(key) {
-	    var _this3 = this;
-
-	    return this._rawData(key, ['Payload [Bytes]', 'Overhead [Bytes]'], function (name) {
-	      return name.startsWith("*FIXED_ARRAY_");
-	    }, function (name) {
-	      return _this3.fixedArraySubTypeName(name);
-	    }, function (value) {
-	      return value === undefined ? [0, 0] : [value.overall - value.over_allocated, value.over_allocated];
-	    });
 	  },
 
 	  instanceTypeSizeData: function instanceTypeSizeData(instanceType, key) {
@@ -21561,42 +21544,22 @@
 	      isStacked: true,
 	      pointsVisible: true,
 	      pointSize: 7,
-	      hAxis: { title: "Time [ms]" },
+	      hAxis: {
+	        title: "Time [ms]",
+	        minValue: this.selectedIsolateData() === null ? 0 : this.selectedIsolateData().start,
+	        maxValue: this.selectedIsolateData() === null ? 0 : this.selectedIsolateData().end
+	      },
 	      vAxis: { title: "Memory consumption [KBytes]" }
 	    };
-	    var instanceTypeDistributionStyle = {
-	      height: "600px",
-	      width: "100%"
-	    };
-	    var instanceTypeDistributionChartStyle = {
-	      width: "50%",
-	      height: "600px",
-	      float: "left"
-	    };
-	    var fixedArrayDetailsStyle = {
-	      display: this.selectedInstanceType() === "FIXED_ARRAY_TYPE" ? "inline" : "none"
-	    };
-	    var fixedArrayOverheadStyle = {
-	      height: "600px",
-	      width: "100%"
-	    };
-	    var fixedArrayOverheadChartStyle = {
-	      width: "50%",
-	      height: "600px",
-	      float: "left"
-	    };
-	    var fixedArrayOverheadOptions = {
-	      vAxis: {
-	        textStyle: { fontSize: 10 }
+	    var mallocedOptions = {
+	      pointsVisible: false,
+	      hAxis: {
+	        ticks: [],
+	        minValue: this.selectedIsolateData() === null ? 0 : this.selectedIsolateData().start,
+	        maxValue: this.selectedIsolateData() === null ? 0 : this.selectedIsolateData().end
 	      },
-	      isStacked: true,
-	      bars: 'horizontal',
-	      series: {
-	        0: { color: '#3366CC' },
-	        1: { color: '#DC3912' }
-	      }
+	      vAxis: { title: "Memory consumption [KBytes]" }
 	    };
-
 	    var instanceTypeSizeOptions = {
 	      bars: 'vertical',
 	      legend: { position: 'none' }
@@ -21677,7 +21640,16 @@
 	            _react2.default.createElement("input", { type: "checkbox", checked: this.state.showMalloced, onChange: this.handleShowMallocedChange })
 	          )
 	        ),
-	        _react2.default.createElement(_basicCharts.AreaChart, { chartData: this.timelineDataGrouped({ showMalloced: this.state.showMalloced }),
+	        _react2.default.createElement(
+	          "div",
+	          { style: { display: this.state.showMalloced ? "inline" : "none" } },
+	          _react2.default.createElement(_basicCharts.LineChart, { ref: "mallocedLineChart",
+	            chartData: this.mallocedData(),
+	            chartStyle: timelineStyle,
+	            chartOptions: mallocedOptions })
+	        ),
+	        _react2.default.createElement(_basicCharts.AreaChart, { ref: "timelineChart",
+	          chartData: this.timelineDataGrouped(),
 	          chartStyle: timelineStyle,
 	          chartOptions: timelineOptions,
 	          handleSelection: this.handleSelection })
@@ -21743,57 +21715,11 @@
 	          )
 	        )
 	      ),
-	      _react2.default.createElement(
-	        "div",
-	        { style: { display: this.selectedGCData() === null ? "none" : "inline" } },
-	        _react2.default.createElement(
-	          "div",
-	          { style: fixedArrayDetailsStyle },
-	          _react2.default.createElement(
-	            "h2",
-	            null,
-	            "FixedArray Distribution"
-	          ),
-	          _react2.default.createElement(
-	            "div",
-	            { ref: "fixed_array_distribution", style: instanceTypeDistributionStyle },
-	            _react2.default.createElement(_basicCharts.PieChart, { chartData: this.fixedArrayData("live"),
-	              chartOptions: null,
-	              chartStyle: instanceTypeDistributionChartStyle }),
-	            _react2.default.createElement(_basicCharts.PieChart, { chartData: this.fixedArrayData("dead"),
-	              chartOptions: null,
-	              chartStyle: instanceTypeDistributionChartStyle })
-	          ),
-	          _react2.default.createElement(
-	            "h2",
-	            null,
-	            "FixedArray Overhead"
-	          ),
-	          _react2.default.createElement(
-	            "div",
-	            { ref: "fixed_array_overhead", style: fixedArrayOverheadStyle },
-	            _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadData("live"),
-	              chartOptions: fixedArrayOverheadOptions,
-	              chartStyle: fixedArrayOverheadChartStyle }),
-	            _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadData("dead"),
-	              chartOptions: fixedArrayOverheadOptions,
-	              chartStyle: fixedArrayOverheadChartStyle })
-	          )
-	        )
-	      )
+	      _react2.default.createElement(_components.FixedArrayDetails, { show: this.selectedInstanceType() === "FIXED_ARRAY_TYPE",
+	        data: this.selectedGCData() }),
+	      _react2.default.createElement(_components.CodeDetails, { show: this.selectedInstanceType() === "CODE_TYPE",
+	        data: this.selectedGCData() })
 	    );
-
-	    /* Unused:
-	         <h2>InstanceType Distribution</h2>
-	        <div ref="instance_type_distribution" style={instanceTypeDistributionStyle}>
-	          <PieChart chartData={this.instanceTypeData("live")}
-	                    chartOptions={null}
-	                    chartStyle={instanceTypeDistributionChartStyle} />
-	          <PieChart chartData={this.instanceTypeData("dead")}
-	                    chartOptions={null}
-	                    chartStyle={instanceTypeDistributionChartStyle} />
-	        </div>
-	     */
 	  }
 	});
 
@@ -21845,10 +21771,15 @@
 	          if (!(entry.isolate in data)) {
 	            data[entry.isolate] = {
 	              non_empty_instance_types: new Set(),
-	              gcs: {}
+	              gcs: {},
+	              samples: {
+	                malloced: {}
+	              },
+	              start: null,
+	              end: null
 	            };
 	          }
-	          if (!(entry.id in data[entry.isolate].gcs)) {
+	          if ("id" in entry && !(entry.id in data[entry.isolate].gcs)) {
 	            data[entry.isolate].gcs[entry.id] = {
 	              non_empty_instance_types: new Set()
 	            };
@@ -21865,10 +21796,16 @@
 
 	            if (entry === null) continue;
 	            if (entry.type === undefined) continue;
-
-	            if (entry.type === "gc_descriptor") {
+	            if (entry.type === "malloced") {
+	              createEntryIfNeeded(entry);
+	              data[entry.isolate].samples.malloced[entry.time] = entry.value;
+	              if (entry.time > data[entry.isolate].end) data[entry.isolate].end = entry.time;
+	              if (data[entry.isolate].start === null) data[entry.isolate].start = entry.time;
+	            } else if (entry.type === "gc_descriptor") {
 	              createEntryIfNeeded(entry);
 	              data[entry.isolate].gcs[entry.id].time = entry.time;
+	              if (entry.time > data[entry.isolate].end) data[entry.isolate].end = entry.time;
+	              if (data[entry.isolate].start === null) data[entry.isolate].start = entry.time;
 	              if ("malloced" in entry) data[entry.isolate].gcs[entry.id].malloced = entry.malloced;
 	            } else if (entry.type === "instance_type_data") {
 	              if (entry.id in data[entry.isolate].gcs) {
@@ -21880,23 +21817,23 @@
 	                    overall: 0
 	                  };
 	                }
-	                if (entry.overall !== 0) {
-	                  var instanceTypeName = entry.instance_type_name;
-	                  var id = entry.id;
-	                  var key = entry.key;
-	                  if (!(entry.isolate in keys)) {
-	                    keys[entry.isolate] = new Set();
-	                  }
-	                  keys[entry.isolate].add(key);
-	                  data[entry.isolate].gcs[id][key].instance_type_data[instanceTypeName] = {
-	                    overall: entry.overall,
-	                    count: entry.count,
-	                    over_allocated: entry.over_allocated,
-	                    overall_histogram: entry.histogram,
-	                    over_allocated_histogram: entry.over_allocated_histogram
-	                  };
-	                  data[entry.isolate].gcs[id][key].overall += entry.overall;
+	                var instanceTypeName = entry.instance_type_name;
+	                var id = entry.id;
+	                var key = entry.key;
+	                if (!(entry.isolate in keys)) {
+	                  keys[entry.isolate] = new Set();
+	                }
+	                keys[entry.isolate].add(key);
+	                data[entry.isolate].gcs[id][key].instance_type_data[instanceTypeName] = {
+	                  overall: entry.overall,
+	                  count: entry.count,
+	                  over_allocated: entry.over_allocated,
+	                  overall_histogram: entry.histogram,
+	                  over_allocated_histogram: entry.over_allocated_histogram
+	                };
+	                data[entry.isolate].gcs[id][key].overall += entry.overall;
 
+	                if (entry.overall !== 0) {
 	                  data[entry.isolate].gcs[id][key].non_empty_instance_types.add(instanceTypeName);
 	                  data[entry.isolate].gcs[id].non_empty_instance_types.add(instanceTypeName);
 	                  data[entry.isolate].non_empty_instance_types.add(instanceTypeName);
@@ -22152,6 +22089,37 @@
 	  }
 	});
 
+	var LineChart = _react2.default.createClass({
+	  displayName: 'LineChart',
+
+	  getInitialState: function getInitialState() {
+	    return { chart: null };
+	  },
+	  _clearChartIfNecessary: function _clearChartIfNecessary() {
+	    if (this.state.chart !== null) {
+	      this.state.chart.clearChart();
+	    }
+	  },
+	  update: function update(e) {
+	    this._clearChartIfNecessary();
+	    if (this.props.chartData === null) return;
+
+	    var chart = new google.visualization.LineChart(this.refs.chart);
+	    chart.draw(google.visualization.arrayToDataTable(this.props.chartData), this.props.chartOptions);
+	    this.state.chart = chart;
+	  },
+	  componentDidUpdate: function componentDidUpdate() {
+	    this.update();
+	  },
+	  render: function render() {
+	    return _react2.default.createElement(
+	      'div',
+	      null,
+	      _react2.default.createElement('div', { ref: 'chart', style: this.props.chartStyle })
+	    );
+	  }
+	});
+
 	var PieChart = _react2.default.createClass({
 	  displayName: 'PieChart',
 
@@ -22167,8 +22135,16 @@
 	    this._clearChartIfNecessary();
 	    if (this.props.chartData === null) return;
 
+	    var data = google.visualization.arrayToDataTable(this.props.chartData);
 	    var chart = new google.visualization.PieChart(this.refs.chart);
-	    chart.draw(google.visualization.arrayToDataTable(this.props.chartData), this.props.chartOptions);
+	    chart.draw(data, this.props.chartOptions);
+	    var selectHandler = function () {
+	      var selectedItem = chart.getSelection()[0];
+	      if (selectedItem && 'handleSelection' in this.props) {
+	        this.props.handleSelection(data.getValue(selectedItem.row, 0));
+	      }
+	    }.bind(this);
+	    google.visualization.events.addListener(chart, 'select', selectHandler);
 	    this.state.chart = chart;
 	  },
 	  componentDidUpdate: function componentDidUpdate() {
@@ -22217,7 +22193,336 @@
 	module.exports = {
 	  AreaChart: AreaChart,
 	  PieChart: PieChart,
-	  BarChart: BarChart
+	  BarChart: BarChart,
+	  LineChart: LineChart
+	};
+
+/***/ },
+/* 175 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _basicCharts = __webpack_require__(174);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+	// eslint-disable-line no-unused-vars
+
+	function rawDataTransform(gcData, key, header, selector, nameCallback, valueCallback) {
+	  var dataset = [['InstanceType'].concat(_toConsumableArray(header))];
+	  var _iteratorNormalCompletion = true;
+	  var _didIteratorError = false;
+	  var _iteratorError = undefined;
+
+	  try {
+	    for (var _iterator = gcData[key].non_empty_instance_types[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+	      var entry = _step.value;
+
+	      if (selector(entry)) {
+	        dataset.push([nameCallback(entry)].concat(_toConsumableArray(valueCallback(gcData[key].instance_type_data[entry]))));
+	      }
+	    }
+	  } catch (err) {
+	    _didIteratorError = true;
+	    _iteratorError = err;
+	  } finally {
+	    try {
+	      if (!_iteratorNormalCompletion && _iterator.return) {
+	        _iterator.return();
+	      }
+	    } finally {
+	      if (_didIteratorError) {
+	        throw _iteratorError;
+	      }
+	    }
+	  }
+
+	  return dataset;
+	}
+
+	var FixedArrayDetails = _react2.default.createClass({
+	  displayName: "FixedArrayDetails",
+
+	  getInitialState: function getInitialState() {
+	    return {
+	      selectedSubType: null
+	    };
+	  },
+
+	  subTypeName: function subTypeName(fullName) {
+	    if (fullName === null) return null;
+	    return fullName.slice("*FIXED_ARRAY_".length).slice(0, -"_SUB_TYPE".length);
+	  },
+
+	  fixedArrayData: function fixedArrayData(key) {
+	    var _this = this;
+
+	    if (this.props.data === null) return null;
+	    return rawDataTransform(this.props.data, key, ['Memory consumption [Bytes]'], function (name) {
+	      return name.startsWith("*FIXED_ARRAY_");
+	    }, function (name) {
+	      return _this.subTypeName(name);
+	    }, function (value) {
+	      return value === undefined ? 0 : [value.overall];
+	    });
+	  },
+
+	  fixedArraySubTypeData: function fixedArraySubTypeData(key) {
+	    if (this.props.data === null) return null;
+	    if (this.state.selectedSubType === null) return null;
+	    var selectedGCData = this.props.data;
+	    var instanceType = this.state.selectedSubType;
+
+	    var bucketLabels = selectedGCData[key].bucket_sizes;
+	    var bucketSizes = selectedGCData[key].instance_type_data[instanceType].overall_histogram;
+	    var labels = ['Bucket', 'Count'];
+	    var data = [];
+	    for (var i = 0; i < bucketSizes.length; i++) {
+	      data.push(['<' + bucketLabels[i], bucketSizes[i]]);
+	    }
+	    return [labels].concat(data);
+	  },
+
+	  fixedArrayOverheadSubTypeData: function fixedArrayOverheadSubTypeData(key) {
+	    if (this.props.data === null) return null;
+	    if (this.state.selectedSubType === null) return null;
+	    var selectedGCData = this.props.data;
+	    var instanceType = this.state.selectedSubType;
+
+	    var bucketLabels = selectedGCData[key].bucket_sizes;
+	    var bucketSizes = selectedGCData[key].instance_type_data[instanceType].over_allocated_histogram;
+	    var labels = ['Bucket', 'Count'];
+	    var data = [];
+	    for (var i = 0; i < bucketSizes.length; i++) {
+	      data.push(['<' + bucketLabels[i], bucketSizes[i]]);
+	    }
+	    return [labels].concat(data);
+	  },
+
+	  fixedArrayOverheadData: function fixedArrayOverheadData(key) {
+	    var _this2 = this;
+
+	    if (this.props.data === null) return null;
+	    return rawDataTransform(this.props.data, key, ['Payload [Bytes]', 'Overhead [Bytes]'], function (name) {
+	      return name.startsWith("*FIXED_ARRAY_");
+	    }, function (name) {
+	      return _this2.subTypeName(name);
+	    }, function (value) {
+	      return value === undefined ? [0, 0] : [value.overall - value.over_allocated, value.over_allocated];
+	    });
+	  },
+
+	  handleSelection: function handleSelection(item) {
+	    console.log("Selected fixed array sub type: " + item);
+	    this.setState({
+	      selectedSubType: "*FIXED_ARRAY_" + item + "_SUB_TYPE"
+	    });
+	  },
+
+	  render: function render() {
+	    var subComponentStyle = {
+	      height: "600px",
+	      width: "100%"
+	    };
+	    var chartStyle = {
+	      width: "50%",
+	      height: "600px",
+	      float: "left"
+	    };
+	    var fixedArrayOverheadOptions = {
+	      vAxis: {
+	        textStyle: { fontSize: 10 }
+	      },
+	      isStacked: true,
+	      bars: 'horizontal',
+	      series: {
+	        0: { color: '#3366CC' },
+	        1: { color: '#DC3912' }
+	      }
+	    };
+	    var subTypeOptions = {
+	      bars: 'vertical',
+	      legend: { position: 'none' }
+	    };
+	    return _react2.default.createElement(
+	      "div",
+	      { style: { display: this.props.show ? "inline" : "none" } },
+	      _react2.default.createElement(
+	        "h2",
+	        null,
+	        "FixedArray Distribution"
+	      ),
+	      _react2.default.createElement(
+	        "div",
+	        { style: subComponentStyle },
+	        _react2.default.createElement(_basicCharts.PieChart, { chartData: this.fixedArrayData("live"),
+	          chartOptions: null,
+	          chartStyle: chartStyle,
+	          handleSelection: this.handleSelection }),
+	        _react2.default.createElement(_basicCharts.PieChart, { chartData: this.fixedArrayData("dead"),
+	          chartOptions: null,
+	          chartStyle: chartStyle,
+	          handleSelection: this.handleSelection })
+	      ),
+	      _react2.default.createElement(
+	        "h2",
+	        null,
+	        "FixedArray Overhead"
+	      ),
+	      _react2.default.createElement(
+	        "div",
+	        { style: subComponentStyle },
+	        _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadData("live"),
+	          chartOptions: fixedArrayOverheadOptions,
+	          chartStyle: chartStyle }),
+	        _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadData("dead"),
+	          chartOptions: fixedArrayOverheadOptions,
+	          chartStyle: chartStyle })
+	      ),
+	      _react2.default.createElement(
+	        "div",
+	        { style: { display: this.state.selectedSubType === null ? "none" : "inline" } },
+	        _react2.default.createElement(
+	          "h2",
+	          null,
+	          "Size Histogram:",
+	          _react2.default.createElement(
+	            "tt",
+	            null,
+	            this.subTypeName(this.state.selectedSubType)
+	          )
+	        ),
+	        _react2.default.createElement(
+	          "div",
+	          { style: subComponentStyle },
+	          _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArraySubTypeData("live"),
+	            chartOptions: subTypeOptions,
+	            chartStyle: chartStyle }),
+	          _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArraySubTypeData("dead"),
+	            chartOptions: subTypeOptions,
+	            chartStyle: chartStyle })
+	        ),
+	        _react2.default.createElement(
+	          "h2",
+	          null,
+	          "Overhead Size Histogram:",
+	          _react2.default.createElement(
+	            "tt",
+	            null,
+	            this.subTypeName(this.state.selectedSubType)
+	          )
+	        ),
+	        _react2.default.createElement(
+	          "div",
+	          { style: subComponentStyle },
+	          _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadSubTypeData("live"),
+	            chartOptions: subTypeOptions,
+	            chartStyle: chartStyle }),
+	          _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadSubTypeData("dead"),
+	            chartOptions: subTypeOptions,
+	            chartStyle: chartStyle })
+	        )
+	      )
+	    );
+	  }
+	});
+
+	var CodeDetails = _react2.default.createClass({
+	  displayName: "CodeDetails",
+
+	  subTypeName: function subTypeName(fullName) {
+	    if (fullName === null) return null;
+	    return fullName.slice("*CODE_".length);
+	  },
+
+	  ageName: function ageName(fullName) {
+	    if (fullName === null) return null;
+	    return fullName.slice("*CODE_AGE_".length);
+	  },
+
+	  codeData: function codeData(key) {
+	    var _this3 = this;
+
+	    if (this.props.data === null) return null;
+	    return rawDataTransform(this.props.data, key, ['Memory consumption [Bytes]'], function (name) {
+	      return name.startsWith("*CODE_") && !name.startsWith("*CODE_AGE_");
+	    }, function (name) {
+	      return _this3.subTypeName(name);
+	    }, function (value) {
+	      return value === undefined ? 0 : [value.overall];
+	    });
+	  },
+
+	  codeAgeData: function codeAgeData(key) {
+	    var _this4 = this;
+
+	    if (this.props.data === null) return null;
+	    return rawDataTransform(this.props.data, key, ['Memory consumption [Bytes]'], function (name) {
+	      return name.startsWith("*CODE_AGE_");
+	    }, function (name) {
+	      return _this4.ageName(name);
+	    }, function (value) {
+	      return value === undefined ? 0 : [value.overall];
+	    });
+	  },
+
+	  render: function render() {
+	    var subComponentStyle = {
+	      height: "600px",
+	      width: "100%"
+	    };
+	    var chartStyle = {
+	      width: "50%",
+	      height: "600px",
+	      float: "left"
+	    };
+	    return _react2.default.createElement(
+	      "div",
+	      { style: { display: this.props.show ? "inline" : "none" } },
+	      _react2.default.createElement(
+	        "h2",
+	        null,
+	        "Code Distribution"
+	      ),
+	      _react2.default.createElement(
+	        "div",
+	        { style: subComponentStyle },
+	        _react2.default.createElement(_basicCharts.PieChart, { chartData: this.codeData("live"),
+	          chartOptions: null,
+	          chartStyle: chartStyle }),
+	        _react2.default.createElement(_basicCharts.PieChart, { chartData: this.codeData("dead"),
+	          chartOptions: null,
+	          chartStyle: chartStyle })
+	      ),
+	      _react2.default.createElement(
+	        "h2",
+	        null,
+	        "Code Age"
+	      ),
+	      _react2.default.createElement(
+	        "div",
+	        { style: subComponentStyle },
+	        _react2.default.createElement(_basicCharts.PieChart, { chartData: this.codeAgeData("live"),
+	          chartOptions: null,
+	          chartStyle: chartStyle }),
+	        _react2.default.createElement(_basicCharts.PieChart, { chartData: this.codeAgeData("dead"),
+	          chartOptions: null,
+	          chartStyle: chartStyle })
+	      )
+	    );
+	  }
+	});
+
+	module.exports = {
+	  CodeDetails: CodeDetails,
+	  FixedArrayDetails: FixedArrayDetails
 	};
 
 /***/ }
