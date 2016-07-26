@@ -291,6 +291,10 @@ export default React.createClass({
       height: "600px",
       float: "left"
     };
+    const fixedArrayDetailsStyle = {
+      display: this.selectedInstanceType() === "FIXED_ARRAY_TYPE" ?
+        "inline" : "none"
+    };
     const fixedArrayOverheadStyle = {
       height: "600px",
       width: "100%"
@@ -396,6 +400,33 @@ The threshold determines which values to fold into the 'Other' category.
         </div>
 
         <div style={{display: this.selectedGCData() === null ? "none" : "inline"}}>
+          <div style={fixedArrayDetailsStyle} >
+            <h2>FixedArray Distribution</h2>
+            <div ref="fixed_array_distribution" style={instanceTypeDistributionStyle}>
+              <PieChart chartData={this.fixedArrayData("live")}
+                        chartOptions={null}
+                        chartStyle={instanceTypeDistributionChartStyle} />
+              <PieChart chartData={this.fixedArrayData("dead")}
+                        chartOptions={null}
+                        chartStyle={instanceTypeDistributionChartStyle} />
+            </div>
+            <h2>FixedArray Overhead</h2>
+            <div ref="fixed_array_overhead" style={fixedArrayOverheadStyle}>
+              <BarChart chartData={this.fixedArrayOverheadData("live")}
+                        chartOptions={fixedArrayOverheadOptions}
+                        chartStyle={fixedArrayOverheadChartStyle} />
+              <BarChart chartData={this.fixedArrayOverheadData("dead")}
+                        chartOptions={fixedArrayOverheadOptions}
+                        chartStyle={fixedArrayOverheadChartStyle} />
+            </div>
+          </div>
+        </div>
+
+      </div>
+    );
+
+    /* Unused:
+
         <h2>InstanceType Distribution</h2>
         <div ref="instance_type_distribution" style={instanceTypeDistributionStyle}>
           <PieChart chartData={this.instanceTypeData("live")}
@@ -405,27 +436,7 @@ The threshold determines which values to fold into the 'Other' category.
                     chartOptions={null}
                     chartStyle={instanceTypeDistributionChartStyle} />
         </div>
-        <h2>FixedArray Distribution</h2>
-        <div ref="fixed_array_distribution" style={instanceTypeDistributionStyle}>
-          <PieChart chartData={this.fixedArrayData("live")}
-                    chartOptions={null}
-                    chartStyle={instanceTypeDistributionChartStyle} />
-          <PieChart chartData={this.fixedArrayData("dead")}
-                    chartOptions={null}
-                    chartStyle={instanceTypeDistributionChartStyle} />
-        </div>
-        <h2>FixedArray Overhead</h2>
-        <div ref="fixed_array_overhead" style={fixedArrayOverheadStyle}>
-          <BarChart chartData={this.fixedArrayOverheadData("live")}
-                    chartOptions={fixedArrayOverheadOptions}
-                    chartStyle={fixedArrayOverheadChartStyle} />
-          <BarChart chartData={this.fixedArrayOverheadData("dead")}
-                    chartOptions={fixedArrayOverheadOptions}
-                    chartStyle={fixedArrayOverheadChartStyle} />
-        </div>
-        </div>
 
-      </div>
-    );
-  },
+    */
+  }
 });
