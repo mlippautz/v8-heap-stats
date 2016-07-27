@@ -1,0 +1,36 @@
+
+// See https://material.google.com/style/color.html#color-color-palette
+let Colors = {
+  // Deep Purple
+  "*FIXED_ARRAY_TYPE_FEEDBACK_VECTOR_SUB_TYPE": "#673AB7",
+  "*FIXED_ARRAY_LITERALS_ARRAY_SUB_TYPE": "#B39DDB",
+
+  // Teal
+  "*FIXED_ARRAY_FAST_ELEMENTS_SUB_TYPE": "#B2DFDB",
+  "*FIXED_ARRAY_FAST_PROPERTIES_SUB_TYPE": "#4DB6AC",
+  "*FIXED_ARRAY_DICTIONARY_ELEMENTS_SUB_TYPE": "#009688",
+  "*FIXED_ARRAY_DICTIONARY_PROPERTIES_SUB_TYPE": "#00796B",
+
+  // Light Green
+  "*FIXED_ARRAY_ENUM_CACHE_SUB_TYPE": "#AED581",
+  "*FIXED_ARRAY_ENUM_INDICES_CACHE_SUB_TYPE": "#8BC34A",
+
+  // Orange
+  "*FIXED_ARRAY_STRING_TABLE_SUB_TYPE": "#FF9800",
+  "*FIXED_ARRAY_SERIALIZED_TEMPLATES_SUB_TYPE": "#FFE0B2",
+  "*FIXED_ARRAY_NUMBER_STRING_CACHE_SUB_TYPE": "#FFB74D",
+  "*FIXED_ARRAY_CODE_STUBS_TABLE_SUB_TYPE": "#F57C00",
+
+  // Brown
+  "*FIXED_ARRAY_DEOPTIMIZATION_DATA_SUB_TYPE": "#795548",
+  "*FIXED_ARRAY_HANDLER_TABLE_SUB_TYPE": "#A1887F",
+
+  getColor(name) {
+    if (name in this) return this[name];
+    return "#efefef";
+  }
+};
+
+module.exports = {
+  Colors: Colors
+};

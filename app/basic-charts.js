@@ -82,9 +82,15 @@ var PieChart = React.createClass({
     this._clearChartIfNecessary();
     if (this.props.chartData === null) return;
 
-    var data = google.visualization.arrayToDataTable(this.props.chartData);
+    let colors = [];
+    for (let i = 0; i < this.props.chartData.colors.length; i++) {
+      colors.push({color: this.props.chartData.colors[i]});
+    }
+
+    let options = Object.assign({slices: colors}, this.props.chartOptions);
+    var data = google.visualization.arrayToDataTable(this.props.chartData.data);
     let chart = new google.visualization.PieChart(this.refs.chart);
-    chart.draw(data, this.props.chartOptions);
+    chart.draw(data, options);
     let selectHandler = function() {
       let selectedItem = chart.getSelection()[0];
       if (selectedItem && ('handleSelection' in this.props)) {

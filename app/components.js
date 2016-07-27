@@ -1,5 +1,6 @@
 import React from "react";
 import {AreaChart, BarChart, LineChart, PieChart} from "./basic-charts";  // eslint-disable-line no-unused-vars
+import {Colors} from "./utils";  // eslint-disable-line no-unused-vars
 
 function rawDataTransform(
     gcData, key, header, selector, nameCallback, valueCallback) {
@@ -28,12 +29,17 @@ var FixedArrayDetails = React.createClass({
 
   fixedArrayData: function(key) {
     if (this.props.data === null) return null;
-    return rawDataTransform(this.props.data,
+    const colors = [];
+    const data = rawDataTransform(this.props.data,
       key,
       ['Memory consumption [Bytes]'],
       name => name.startsWith("*FIXED_ARRAY_"),
-      name => this.subTypeName(name),
+      name => {
+        colors.push(Colors.getColor(name));
+        return this.subTypeName(name);
+      },
       value => value === undefined ? 0 : [value.overall]);
+    return {data: data, colors: colors};
   },
 
   fixedArraySubTypeData: function(key) {
@@ -182,22 +188,24 @@ var CodeDetails = React.createClass({
 
   codeData: function(key) {
     if (this.props.data === null) return null;
-    return rawDataTransform(this.props.data,
+    const data = rawDataTransform(this.props.data,
       key,
       ['Memory consumption [Bytes]'],
       name => name.startsWith("*CODE_") && !name.startsWith("*CODE_AGE_"),
       name => this.subTypeName(name),
       value => value === undefined ? 0 : [value.overall]);
+    return {data: data, colors: []};
   },
 
   codeAgeData: function(key) {
     if (this.props.data === null) return null;
-    return rawDataTransform(this.props.data,
+    const data = rawDataTransform(this.props.data,
       key,
       ['Memory consumption [Bytes]'],
       name => name.startsWith("*CODE_AGE_"),
       name => this.ageName(name),
       value => value === undefined ? 0 : [value.overall]);
+    return {data: data, colors: []};
   },
 
   render: function() {
