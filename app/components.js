@@ -101,9 +101,18 @@ var FixedArrayDetails = React.createClass({
       height: "600px",
       width: "100%"
     };
+    const subComponentStyleSmall = {
+      height: "300px",
+      width: "100%"
+    };
     const chartStyle = {
       width: "50%",
       height: "600px",
+      float: "left"
+    };
+    const chartStyleSmall = {
+      width: "50%",
+      height: "300px",
       float: "left"
     };
     const fixedArrayOverheadOptions = {
@@ -149,25 +158,25 @@ var FixedArrayDetails = React.createClass({
             Size Histogram:
             <tt>{this.subTypeName(this.state.selectedSubType)}</tt>
           </h2>
-          <div style={subComponentStyle}>
+          <div style={subComponentStyleSmall}>
             <BarChart chartData={this.fixedArraySubTypeData("live")}
                       chartOptions={subTypeOptions}
-                      chartStyle={chartStyle} />
+                      chartStyle={chartStyleSmall} />
             <BarChart chartData={this.fixedArraySubTypeData("dead")}
                       chartOptions={subTypeOptions}
-                      chartStyle={chartStyle} />
+                      chartStyle={chartStyleSmall} />
           </div>
           <h2>
             Overhead Size Histogram:
             <tt>{this.subTypeName(this.state.selectedSubType)}</tt>
           </h2>
-          <div style={subComponentStyle}>
+          <div style={subComponentStyleSmall}>
             <BarChart chartData={this.fixedArrayOverheadSubTypeData("live")}
                       chartOptions={subTypeOptions}
-                      chartStyle={chartStyle} />
+                      chartStyle={chartStyleSmall} />
             <BarChart chartData={this.fixedArrayOverheadSubTypeData("dead")}
                       chartOptions={subTypeOptions}
-                      chartStyle={chartStyle} />
+                      chartStyle={chartStyleSmall} />
           </div>
         </div>
       </div>
