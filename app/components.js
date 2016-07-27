@@ -4,10 +4,10 @@ import {AreaChart, BarChart, LineChart, PieChart} from "./basic-charts";  // esl
 function rawDataTransform(
     gcData, key, header, selector, nameCallback, valueCallback) {
   const dataset = [['InstanceType', ...header]];
-  for (let entry of gcData[key].non_empty_instance_types) {
+  for (let entry of gcData[key].nonEmptyInstanceTypes) {
     if (selector(entry)) {
       dataset.push([nameCallback(entry),
-                    ...valueCallback(gcData[key].instance_type_data[entry])]);
+                    ...valueCallback(gcData[key].instanceTypeData[entry])]);
     }
   }
   return dataset;
@@ -42,9 +42,9 @@ var FixedArrayDetails = React.createClass({
     const selectedGCData = this.props.data;
     const instanceType = this.state.selectedSubType;
 
-    const bucketLabels = selectedGCData[key].bucket_sizes;
+    const bucketLabels = selectedGCData[key].bucketSizes;
     const bucketSizes = selectedGCData[key]
-      .instance_type_data[instanceType].overall_histogram;
+      .instanceTypeData[instanceType].overallHistogram;
     const labels = ['Bucket', 'Count'];
     const data = [];
     for (let i = 0; i < bucketSizes.length; i++) {
@@ -59,9 +59,9 @@ var FixedArrayDetails = React.createClass({
     const selectedGCData = this.props.data;
     const instanceType = this.state.selectedSubType;
 
-    const bucketLabels = selectedGCData[key].bucket_sizes;
+    const bucketLabels = selectedGCData[key].bucketSizes;
     const bucketSizes = selectedGCData[key]
-      .instance_type_data[instanceType].over_allocated_histogram;
+      .instanceTypeData[instanceType].overAllocatedHistogram;
     const labels = ['Bucket', 'Count'];
     const data = [];
     for (let i = 0; i < bucketSizes.length; i++) {
@@ -79,7 +79,7 @@ var FixedArrayDetails = React.createClass({
       name => this.subTypeName(name),
       value => value === undefined ?
         [0, 0] :
-        [value.overall - value.over_allocated, value.over_allocated]
+        [value.overall - value.overAllocated, value.overAllocated]
       );
   },
 

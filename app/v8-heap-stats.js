@@ -67,12 +67,12 @@ export default React.createClass({
     let gcCount = 0;
     for (let gc of Object.keys(perGCData)) {
       dataset[gcCount] = [perGCData[gc].time];
-      for (let instanceType of isolateData.non_empty_instance_types) {
+      for (let instanceType of isolateData.nonEmptyInstanceTypes) {
         if (instanceType.startsWith("*")) continue;
 
         if (gcCount === 0) labels.push(instanceType);
 
-        const instanceTypeData = perGCData[gc].live.instance_type_data;
+        const instanceTypeData = perGCData[gc].live.instanceTypeData;
         if (instanceType in instanceTypeData) {
           dataset[gcCount].push(instanceTypeData[instanceType].overall);
         } else {
@@ -121,7 +121,7 @@ export default React.createClass({
              i++) {
           const instanceType = perGCData[gc].live.rankedInstanceTypes[i];
           if (instanceType.startsWith("*")) continue;
-          let instanceTypeData = perGCData[gc].live.instance_type_data;
+          let instanceTypeData = perGCData[gc].live.instanceTypeData;
           if ((instanceType in instanceTypeData) &&
               (instanceTypeData[instanceType].overall > (perGCData[gc].live.overall * threshold))) {
             interestingInstanceTypesArray.push(instanceType);
@@ -129,7 +129,7 @@ export default React.createClass({
           }
         }
 
-        for (let instanceType of isolateData.non_empty_instance_types) {
+        for (let instanceType of isolateData.nonEmptyInstanceTypes) {
           if (instanceType.startsWith("*")) continue;
           if (!interestingInstanceTypes.has(instanceType)) {
             nonInterestingInstanceTypes.add(instanceType);
@@ -142,7 +142,7 @@ export default React.createClass({
       for (let i = 0; i < interestingInstanceTypesArray.length; i++) {
         const instanceType = interestingInstanceTypesArray[i];
         if (gcCount === 0) labels.push(instanceType);
-        const instanceTypeData = perGCData[gc].live.instance_type_data;
+        const instanceTypeData = perGCData[gc].live.instanceTypeData;
         if (instanceType in instanceTypeData) {
           dataset[gcCount].push(instanceTypeData[instanceType].overall / KB);
         } else {
@@ -151,7 +151,7 @@ export default React.createClass({
       }
 
       for (let instanceType of nonInterestingInstanceTypes) {
-        const instanceTypeData = perGCData[gc].live.instance_type_data;
+        const instanceTypeData = perGCData[gc].live.instanceTypeData;
         if (instanceType in instanceTypeData) {
           other += instanceTypeData[instanceType].overall / KB;
         }
@@ -170,10 +170,10 @@ export default React.createClass({
     if (gcData === null) return null;
 
     const dataset = [['InstanceType', ...header]];
-    for (let entry of gcData[key].non_empty_instance_types) {
+    for (let entry of gcData[key].nonEmptyInstanceTypes) {
       if (selector(entry)) {
         dataset.push([nameCallback(entry),
-                      ...valueCallback(gcData[key].instance_type_data[entry])]);
+                      ...valueCallback(gcData[key].instanceTypeData[entry])]);
       }
     }
     return dataset;
@@ -199,8 +199,8 @@ export default React.createClass({
     const instanceType = this.selectedInstanceType();
     const gcData = this.selectedGCData();
     if (gcData === null || instanceType === null) return emptyResponse;
-    if (!(instanceType in gcData[key].instance_type_data)) return emptyResponse;
-    return gcData[key].instance_type_data[instanceType];
+    if (!(instanceType in gcData[key].instanceTypeData)) return emptyResponse;
+    return gcData[key].instanceTypeData[instanceType];
   },
 
   typeName: function(fullName) {
@@ -223,9 +223,9 @@ export default React.createClass({
     const selectedGCData = this.selectedGCData();
     if (selectedGCData === null) return null;
 
-    const bucketLabels = selectedGCData[key].bucket_sizes;
+    const bucketLabels = selectedGCData[key].bucketSizes;
     const bucketSizes = selectedGCData[key]
-      .instance_type_data[instanceType].overall_histogram;
+      .instanceTypeData[instanceType].overallHistogram;
     const labels = ['Bucket', 'Count'];
     const data = [];
     for (let i = 0; i < bucketSizes.length; i++) {
