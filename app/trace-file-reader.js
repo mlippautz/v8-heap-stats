@@ -15,6 +15,8 @@ export default React.createClass({
         let contents = e.target.result.split("\n");
         contents = contents.map(function(line) {
           try {
+            // Strip away a potentially present adb logcat prefix.
+            line = line.replace(/^I\/v8\s*\(\d+\):\s+/g, "");
             return JSON.parse(line);
           } catch (e) {
             console.log("unable to parse line: '" + line + "'' (" + e + ")");
@@ -45,8 +47,9 @@ export default React.createClass({
         };
 
         for (var entry of contents) {
-          if (entry === null) continue;
-          if (entry.type === undefined) continue;
+          if (entry === null || entry.type === undefined) {
+            continue;
+          }
           if (entry.type === "malloced") {
             createEntryIfNeeded(entry);
             data[entry.isolate].samples.malloced[entry.time] = entry.value;
