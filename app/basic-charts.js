@@ -73,7 +73,7 @@ var PieChart = React.createClass({
   getInitialState: function() {
     return {
       chart: null,
-      selected: null,
+      selected: null
     };
   },
   _clearChartIfNecessary: function() {
@@ -90,7 +90,7 @@ var PieChart = React.createClass({
       sliceOptions.push({
         color: this.props.chartData.colors[i],
         offset: this.state.selected !== null &&
-                this.state.selected === this.props.chartData.data[i+1][0] ?
+                this.state.selected === this.props.chartData.data[i + 1][0] ?
                   0.15 : 0
       });
     }

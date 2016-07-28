@@ -307,6 +307,7 @@ export default React.createClass({
       vAxis: {title: "Memory consumption [KBytes]"}
     };
     const instanceTypeSizeOptions = {
+      title: 'Size Histogram',
       bars: 'vertical',
       legend: {position: 'none'}
     };
@@ -375,25 +376,24 @@ Show malloced memory:
         </div>
 
         <div style={{display: this.selectedInstanceType() === null ? "none" : "inline"}}>
-          <h2>Size Histogram: <tt>{this.typeName(this.selectedInstanceType())}</tt></h2>
-          <p>
-            Plot shows the size histogram for the selected instance type.
-          </p>
+          <h2>Details: <tt>{this.typeName(this.selectedInstanceType())}</tt></h2>
           <div ref="instance_type_size_distribution" style={null}>
             <div style={{width: '50%', float: 'left'}}>
               <h3 style={{textAlign: 'center'}}>Live</h3>
-              <p>
-                Overall memory consumption: {this.selectedInstanceTypeData("live").overall / KB} KB
-              </p>
+              <ul>
+                <li>Overall memory consumption: {this.selectedInstanceTypeData("live").overall / KB} KB</li>
+                <li>Overall count: {this.selectedInstanceTypeData("live").count}</li>
+              </ul>
               <BarChart chartData={this.instanceTypeSizeData(this.selectedInstanceType(), "live")}
                         chartOptions={instanceTypeSizeOptions}
                         chartStyle={{height: instanceTypeSizeHeight, margin: '30px'}} />
             </div>
             <div style={{width: '50%', float: 'left'}}>
               <h3 style={{textAlign: 'center'}}>Dead</h3>
-              <p>
-                Overall memory consumption: {this.selectedInstanceTypeData("dead").overall / KB} KB
-              </p>
+              <ul>
+                <li>Overall memory consumption: {this.selectedInstanceTypeData("dead").overall / KB} KB</li>
+                <li>Overall count: {this.selectedInstanceTypeData("dead").count}</li>
+              </ul>
               <BarChart chartData={this.instanceTypeSizeData(this.selectedInstanceType(), "dead")}
                         chartOptions={instanceTypeSizeOptions}
                         chartStyle={{height: instanceTypeSizeHeight, margin: '30px'}} />
