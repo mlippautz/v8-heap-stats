@@ -22429,7 +22429,7 @@
 	        _react2.default.createElement(
 	          "h2",
 	          null,
-	          "Size Histogram:",
+	          "Size Histogram: ",
 	          _react2.default.createElement(
 	            "tt",
 	            null,
@@ -22449,7 +22449,7 @@
 	        _react2.default.createElement(
 	          "h2",
 	          null,
-	          "Overhead Size Histogram:",
+	          "Overhead Histogram: ",
 	          _react2.default.createElement(
 	            "tt",
 	            null,
@@ -22575,6 +22575,7 @@
 	  // Deep Purple
 	  "*FIXED_ARRAY_TYPE_FEEDBACK_VECTOR_SUB_TYPE": "#673AB7",
 	  "*FIXED_ARRAY_LITERALS_ARRAY_SUB_TYPE": "#B39DDB",
+	  "*FIXED_ARRAY_TYPE_FEEDBACK_METADATA_SUB_TYPE": "#7E57C2",
 
 	  // Teal
 	  "*FIXED_ARRAY_FAST_ELEMENTS_SUB_TYPE": "#B2DFDB",
@@ -22585,16 +22586,34 @@
 	  // Light Green
 	  "*FIXED_ARRAY_ENUM_CACHE_SUB_TYPE": "#AED581",
 	  "*FIXED_ARRAY_ENUM_INDICES_CACHE_SUB_TYPE": "#8BC34A",
+	  "*FIXED_ARRAY_MAP_CODE_CACHE_SUB_TYPE": "#7CB342",
+	  "*FIXED_ARRAY_DEPENDENT_CODE_SUB_TYPE": "#DCEDC8",
 
 	  // Orange
 	  "*FIXED_ARRAY_STRING_TABLE_SUB_TYPE": "#FF9800",
 	  "*FIXED_ARRAY_SERIALIZED_TEMPLATES_SUB_TYPE": "#FFE0B2",
 	  "*FIXED_ARRAY_NUMBER_STRING_CACHE_SUB_TYPE": "#FFB74D",
 	  "*FIXED_ARRAY_CODE_STUBS_TABLE_SUB_TYPE": "#F57C00",
+	  "*FIXED_ARRAY_WEAK_NEW_SPACE_OBJECT_TO_CODE_SUB_TYPE": "#FB8C00",
+	  "*FIXED_ARRAY_INTRINSIC_FUNCTION_NAMES_SUB_TYPE": "#EF6C00",
 
 	  // Brown
 	  "*FIXED_ARRAY_DEOPTIMIZATION_DATA_SUB_TYPE": "#795548",
 	  "*FIXED_ARRAY_HANDLER_TABLE_SUB_TYPE": "#A1887F",
+
+	  // Red
+	  "*FIXED_ARRAY_SCOPE_INFO_SUB_TYPE": "#F44336",
+	  "*FIXED_ARRAY_EMBEDDED_OBJECT_SUB_TYPE": "#E57373",
+
+	  // Blue
+	  "*FIXED_ARRAY_CONTEXT_SUB_TYPE": "#2196F3",
+	  "*FIXED_ARRAY_DESCRIPTOR_ARRAY_SUB_TYPE": "#64B5F6",
+	  "*FIXED_ARRAY_COPY_ON_WRITE_SUB_TYPE": "#BBDEFB",
+	  "*FIXED_ARRAY_TEMPLATE_INSTANTIATIONS_CACHE_SUB_TYPE": "#90CAF9",
+
+	  // Green
+	  "*FIXED_ARRAY_SHARED_FUNCTION_INFOS_SUB_TYPE": "#4CAF50",
+	  "*FIXED_ARRAY_OPTIMIZED_CODE_MAP_SUB_TYPE": "#81C784",
 
 	  getColor: function getColor(name) {
 	    if (name in this) return this[name];
