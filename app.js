@@ -21561,6 +21561,7 @@
 	      vAxis: { title: "Memory consumption [KBytes]" }
 	    };
 	    var instanceTypeSizeOptions = {
+	      title: 'Size Histogram',
 	      bars: 'vertical',
 	      legend: { position: 'none' }
 	    };
@@ -21660,17 +21661,12 @@
 	        _react2.default.createElement(
 	          "h2",
 	          null,
-	          "Size Histogram: ",
+	          "Details: ",
 	          _react2.default.createElement(
 	            "tt",
 	            null,
 	            this.typeName(this.selectedInstanceType())
 	          )
-	        ),
-	        _react2.default.createElement(
-	          "p",
-	          null,
-	          "Plot shows the size histogram for the selected instance type."
 	        ),
 	        _react2.default.createElement(
 	          "div",
@@ -21684,11 +21680,21 @@
 	              "Live"
 	            ),
 	            _react2.default.createElement(
-	              "p",
+	              "ul",
 	              null,
-	              "Overall memory consumption: ",
-	              this.selectedInstanceTypeData("live").overall / KB,
-	              " KB"
+	              _react2.default.createElement(
+	                "li",
+	                null,
+	                "Overall memory consumption: ",
+	                this.selectedInstanceTypeData("live").overall / KB,
+	                " KB"
+	              ),
+	              _react2.default.createElement(
+	                "li",
+	                null,
+	                "Overall count: ",
+	                this.selectedInstanceTypeData("live").count
+	              )
 	            ),
 	            _react2.default.createElement(_basicCharts.BarChart, { chartData: this.instanceTypeSizeData(this.selectedInstanceType(), "live"),
 	              chartOptions: instanceTypeSizeOptions,
@@ -21703,11 +21709,21 @@
 	              "Dead"
 	            ),
 	            _react2.default.createElement(
-	              "p",
+	              "ul",
 	              null,
-	              "Overall memory consumption: ",
-	              this.selectedInstanceTypeData("dead").overall / KB,
-	              " KB"
+	              _react2.default.createElement(
+	                "li",
+	                null,
+	                "Overall memory consumption: ",
+	                this.selectedInstanceTypeData("dead").overall / KB,
+	                " KB"
+	              ),
+	              _react2.default.createElement(
+	                "li",
+	                null,
+	                "Overall count: ",
+	                this.selectedInstanceTypeData("dead").count
+	              )
 	            ),
 	            _react2.default.createElement(_basicCharts.BarChart, { chartData: this.instanceTypeSizeData(this.selectedInstanceType(), "dead"),
 	              chartOptions: instanceTypeSizeOptions,
@@ -22615,9 +22631,13 @@
 	  "*FIXED_ARRAY_SHARED_FUNCTION_INFOS_SUB_TYPE": "#4CAF50",
 	  "*FIXED_ARRAY_OPTIMIZED_CODE_MAP_SUB_TYPE": "#81C784",
 
+	  // Yellow
+	  "*FIXED_ARRAY_BYTECODE_ARRAY_HANDLER_TABLE_SUB_TYPE": "#FFF176",
+	  "*FIXED_ARRAY_BYTECODE_ARRAY_CONSTANT_POOL_SUB_TYPE": "#FFEB3B",
+
 	  getColor: function getColor(name) {
 	    if (name in this) return this[name];
-	    return "#efefef";
+	    return "#999999";
 	  }
 	};
 
