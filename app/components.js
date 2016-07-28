@@ -155,8 +155,7 @@ var FixedArrayDetails = React.createClass({
         <div style={{display: this.state.selectedSubType === null ?
                                   "none" : "inline"}} >
           <h2>
-            Size Histogram:
-            <tt>{this.subTypeName(this.state.selectedSubType)}</tt>
+            Size Histogram: <tt>{this.subTypeName(this.state.selectedSubType)}</tt>
           </h2>
           <div style={subComponentStyleSmall}>
             <BarChart chartData={this.fixedArraySubTypeData("live")}
@@ -167,8 +166,7 @@ var FixedArrayDetails = React.createClass({
                       chartStyle={chartStyleSmall} />
           </div>
           <h2>
-            Overhead Size Histogram:
-            <tt>{this.subTypeName(this.state.selectedSubType)}</tt>
+            Overhead Histogram: <tt>{this.subTypeName(this.state.selectedSubType)}</tt>
           </h2>
           <div style={subComponentStyleSmall}>
             <BarChart chartData={this.fixedArrayOverheadSubTypeData("live")}
