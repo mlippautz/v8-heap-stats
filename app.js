@@ -22127,7 +22127,10 @@
 	  displayName: 'PieChart',
 
 	  getInitialState: function getInitialState() {
-	    return { chart: null };
+	    return {
+	      chart: null,
+	      selected: null
+	    };
 	  },
 	  _clearChartIfNecessary: function _clearChartIfNecessary() {
 	    if (this.state.chart !== null) {
@@ -22138,19 +22141,29 @@
 	    this._clearChartIfNecessary();
 	    if (this.props.chartData === null) return;
 
-	    var colors = [];
+	    var sliceOptions = [];
 	    for (var i = 0; i < this.props.chartData.colors.length; i++) {
-	      colors.push({ color: this.props.chartData.colors[i] });
+	      sliceOptions.push({
+	        color: this.props.chartData.colors[i],
+	        offset: this.state.selected !== null && this.state.selected === this.props.chartData.data[i + 1][0] ? 0.15 : 0
+	      });
 	    }
 
-	    var options = Object.assign({ slices: colors }, this.props.chartOptions);
+	    var options = Object.assign({ slices: sliceOptions }, this.props.chartOptions);
 	    var data = google.visualization.arrayToDataTable(this.props.chartData.data);
 	    var chart = new google.visualization.PieChart(this.refs.chart);
 	    chart.draw(data, options);
 	    var selectHandler = function () {
 	      var selectedItem = chart.getSelection()[0];
-	      if (selectedItem && 'handleSelection' in this.props) {
-	        this.props.handleSelection(data.getValue(selectedItem.row, 0));
+	      if (selectedItem) {
+	        var s = data.getValue(selectedItem.row, 0);
+	        this.setState({
+	          chart: chart,
+	          selected: s
+	        });
+	        if ('handleSelection' in this.props) {
+	          this.props.handleSelection(s);
+	        }
 	      }
 	    }.bind(this);
 	    google.visualization.events.addListener(chart, 'select', selectHandler);
@@ -22346,9 +22359,18 @@
 	      height: "600px",
 	      width: "100%"
 	    };
+	    var subComponentStyleSmall = {
+	      height: "300px",
+	      width: "100%"
+	    };
 	    var chartStyle = {
 	      width: "50%",
 	      height: "600px",
+	      float: "left"
+	    };
+	    var chartStyleSmall = {
+	      width: "50%",
+	      height: "300px",
 	      float: "left"
 	    };
 	    var fixedArrayOverheadOptions = {
@@ -22416,13 +22438,13 @@
 	        ),
 	        _react2.default.createElement(
 	          "div",
-	          { style: subComponentStyle },
+	          { style: subComponentStyleSmall },
 	          _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArraySubTypeData("live"),
 	            chartOptions: subTypeOptions,
-	            chartStyle: chartStyle }),
+	            chartStyle: chartStyleSmall }),
 	          _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArraySubTypeData("dead"),
 	            chartOptions: subTypeOptions,
-	            chartStyle: chartStyle })
+	            chartStyle: chartStyleSmall })
 	        ),
 	        _react2.default.createElement(
 	          "h2",
@@ -22436,13 +22458,13 @@
 	        ),
 	        _react2.default.createElement(
 	          "div",
-	          { style: subComponentStyle },
+	          { style: subComponentStyleSmall },
 	          _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadSubTypeData("live"),
 	            chartOptions: subTypeOptions,
-	            chartStyle: chartStyle }),
+	            chartStyle: chartStyleSmall }),
 	          _react2.default.createElement(_basicCharts.BarChart, { chartData: this.fixedArrayOverheadSubTypeData("dead"),
 	            chartOptions: subTypeOptions,
-	            chartStyle: chartStyle })
+	            chartStyle: chartStyleSmall })
 	        )
 	      )
 	    );
