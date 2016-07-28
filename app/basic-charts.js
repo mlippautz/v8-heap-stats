@@ -71,7 +71,10 @@ var LineChart = React.createClass({
 
 var PieChart = React.createClass({
   getInitialState: function() {
-    return {chart: null};
+    return {
+      chart: null,
+      selected: null,
+    };
   },
   _clearChartIfNecessary: function() {
     if (this.state.chart !== null) {
@@ -82,19 +85,31 @@ var PieChart = React.createClass({
     this._clearChartIfNecessary();
     if (this.props.chartData === null) return;
 
-    let colors = [];
+    const sliceOptions = [];
     for (let i = 0; i < this.props.chartData.colors.length; i++) {
-      colors.push({color: this.props.chartData.colors[i]});
+      sliceOptions.push({
+        color: this.props.chartData.colors[i],
+        offset: this.state.selected !== null &&
+                this.state.selected === this.props.chartData.data[i+1][0] ?
+                  0.15 : 0
+      });
     }
 
-    let options = Object.assign({slices: colors}, this.props.chartOptions);
-    var data = google.visualization.arrayToDataTable(this.props.chartData.data);
+    let options = Object.assign({slices: sliceOptions}, this.props.chartOptions);
+    let data = google.visualization.arrayToDataTable(this.props.chartData.data);
     let chart = new google.visualization.PieChart(this.refs.chart);
     chart.draw(data, options);
     let selectHandler = function() {
       let selectedItem = chart.getSelection()[0];
-      if (selectedItem && ('handleSelection' in this.props)) {
-        this.props.handleSelection(data.getValue(selectedItem.row, 0));
+      if (selectedItem) {
+        const s = data.getValue(selectedItem.row, 0);
+        this.setState({
+          chart: chart,
+          selected: s
+        });
+        if ('handleSelection' in this.props) {
+          this.props.handleSelection(s);
+        }
       }
     }.bind(this);
     google.visualization.events.addListener(chart, 'select', selectHandler);
