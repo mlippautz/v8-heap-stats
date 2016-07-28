@@ -44,9 +44,13 @@ let Colors = {
   "*FIXED_ARRAY_SHARED_FUNCTION_INFOS_SUB_TYPE": "#4CAF50",
   "*FIXED_ARRAY_OPTIMIZED_CODE_MAP_SUB_TYPE": "#81C784",
 
+  // Yellow
+  "*FIXED_ARRAY_BYTECODE_ARRAY_HANDLER_TABLE_SUB_TYPE": "#FFF176",
+  "*FIXED_ARRAY_BYTECODE_ARRAY_CONSTANT_POOL_SUB_TYPE": "#FFEB3B",
+
   getColor(name) {
     if (name in this) return this[name];
-    return "#efefef";
+    return "#999999";
   }
 };
 
