@@ -56,6 +56,7 @@ const Colors = {
 
 const InstanceTypeGroups = {
   Rest: [
+  	"CELL_TYPE",
     "PROTOTYPE_INFO_TYPE",
     "SYMBOL_TYPE",
     "ODDBALL_TYPE",
