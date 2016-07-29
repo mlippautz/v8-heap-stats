@@ -106,6 +106,7 @@ const InstanceTypeGroups = {
   JSSpecialObjects: [
     "JS_API_OBJECT_TYPE",
     "JS_ARGUMENTS_TYPE",
+    "JS_ARRAY_BUFFER_TYPE",
     "JS_ARRAY_TYPE",
     "JS_BOUND_FUNCTION_TYPE",
     "JS_ERROR_TYPE",

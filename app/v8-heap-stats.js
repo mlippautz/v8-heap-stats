@@ -172,7 +172,7 @@ export default React.createClass({
     const perGCData = isolateData.gcs;
     const dataset = [];
     const labels = ['Time [ms]'];
-    let groups = {
+    const groups = {
       "Special JS Objects": {
         select: name => InstanceTypeGroups.JSSpecialObjects.includes(name),
         value: 0
@@ -193,10 +193,8 @@ export default React.createClass({
         if (instanceType.startsWith("*")) continue;
 
         const instanceTypeData = perGCData[gc].live.instanceTypeData;
-        let value = 0;
-        if (instanceType in instanceTypeData) {
-          value = instanceTypeData[instanceType].overall;
-        }
+        const value = instanceType in instanceTypeData ?
+          instanceTypeData[instanceType].overall : 0;
 
         let grouped = false;
         for (const key of Object.keys(groups)) {
