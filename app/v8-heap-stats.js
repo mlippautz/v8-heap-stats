@@ -2,7 +2,7 @@ import React from "react";
 
 import TraceFileReader from "./trace-file-reader";  // eslint-disable-line no-unused-vars
 import {AreaChart, BarChart, LineChart, PieChart} from "./basic-charts";  // eslint-disable-line no-unused-vars
-import {CodeDetails, FixedArrayDetails} from "./components";  // eslint-disable-line no-unused-vars
+import {CodeDetails, FixedArrayDetails, InstanceTypeDetails} from "./components";  // eslint-disable-line no-unused-vars
 import {InstanceTypeGroups} from "./utils";
 
 const KB = 1024;
@@ -372,12 +372,6 @@ export default React.createClass({
       },
       legend: {position: 'none'}
     };
-    const instanceTypeSizeOptions = {
-      title: 'Size Histogram',
-      bars: 'vertical',
-      legend: {position: 'none'}
-    };
-    const instanceTypeSizeHeight = "300px";
 
     const isolateOptions = this.state.data === null ?
         (<option>Load some data first...</option>) :
@@ -435,40 +429,14 @@ Show malloced memory:
                      chartOptions={mallocedOptions} />
         </div>
         </div>
-
-        <div style={{display: this.selectedInstanceType() === null ? "none" : "inline"}}>
-          <h2>Details: <tt>{this.typeName(this.selectedInstanceType())}</tt></h2>
-          <div ref="instance_type_size_distribution" style={null}>
-            <div style={{width: '50%', float: 'left'}}>
-              <h3 style={{textAlign: 'center'}}>Live</h3>
-              <ul>
-                <li>Overall memory consumption: {this.selectedInstanceTypeData("live").overall / KB} KB</li>
-                <li>Overall count: {this.selectedInstanceTypeData("live").count}</li>
-              </ul>
-              <BarChart chartData={this.instanceTypeSizeData(this.selectedInstanceType(), "live")}
-                        chartOptions={instanceTypeSizeOptions}
-                        chartStyle={{height: instanceTypeSizeHeight, margin: '30px'}} />
-            </div>
-            <div style={{width: '50%', float: 'left'}}>
-              <h3 style={{textAlign: 'center'}}>Dead</h3>
-              <ul>
-                <li>Overall memory consumption: {this.selectedInstanceTypeData("dead").overall / KB} KB</li>
-                <li>Overall count: {this.selectedInstanceTypeData("dead").count}</li>
-              </ul>
-              <BarChart chartData={this.instanceTypeSizeData(this.selectedInstanceType(), "dead")}
-                        chartOptions={instanceTypeSizeOptions}
-                        chartStyle={{height: instanceTypeSizeHeight, margin: '30px'}} />
-            </div>
-          </div>
-        </div>
-
+        <InstanceTypeDetails instanceType={this.selectedInstanceType()} data={this.selectedGCData()} />
         <FixedArrayDetails show={this.selectedInstanceType() === "FIXED_ARRAY_TYPE"}
                            data={this.selectedGCData()} />
 
         <CodeDetails show={this.selectedInstanceType() === "CODE_TYPE"}
                      data={this.selectedGCData()} />
-
       </div>
     );
   }
 });
+

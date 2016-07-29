@@ -27,10 +27,13 @@ var AreaChart = React.createClass({
     }.bind(this);
     google.visualization.events.addListener(chart, 'select', selectHandler);
   },
-  componentDidUpdate: function() {
+  componentDidUpdate() {
     this.update();
   },
-  render: function() {
+  componentDidMount() {
+    this.update();
+  },
+  render() {
     return (
       <div>
         <div ref="chart" style={this.props.chartStyle} ></div>
@@ -115,10 +118,13 @@ var PieChart = React.createClass({
     google.visualization.events.addListener(chart, 'select', selectHandler);
     this.state.chart = chart;
   },
-  componentDidUpdate: function() {
+  componentDidUpdate() {
     this.update();
   },
-  render: function() {
+  componentDidMount() {
+    this.update();
+  },
+  render() {
     return (
       <div>
         <div ref="chart" style={this.props.chartStyle} ></div>
@@ -145,10 +151,13 @@ var BarChart = React.createClass({
                google.charts.Bar.convertOptions(this.props.chartOptions));
     this.state.chart = chart;
   },
-  componentDidUpdate: function() {
+  componentDidUpdate() {
     this.update();
   },
-  render: function() {
+  componentDidMount() {
+    this.update();
+  },
+  render() {
     return (
       <div>
         <div ref="chart" style={this.props.chartStyle} ></div>

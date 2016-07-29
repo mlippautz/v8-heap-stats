@@ -1,6 +1,8 @@
 import React from "react";
 import {AreaChart, BarChart, LineChart, PieChart} from "./basic-charts";  // eslint-disable-line no-unused-vars
-import {Colors} from "./utils";  // eslint-disable-line no-unused-vars
+import {Colors, InstanceTypeGroups} from "./utils";  // eslint-disable-line no-unused-vars
+
+const KB = 1024;
 
 function rawDataTransform(
     gcData, key, header, selector, nameCallback, valueCallback) {
@@ -12,6 +14,18 @@ function rawDataTransform(
     }
   }
   return dataset;
+}
+
+function typeName(fullName) {
+  if (fullName === null) return null;
+  return fullName.slice(0, -("_TYPE".length));
+}
+
+function isSimpleInstanceType(name) {
+  for (let key of Object.keys(InstanceTypeGroups)) {
+    if (key === name) return false;
+  }
+  return true;
 }
 
 var FixedArrayDetails = React.createClass({
@@ -250,7 +264,94 @@ var CodeDetails = React.createClass({
   }
 });
 
+var InstanceTypeDetails = React.createClass({
+  selectedInstanceTypeData: function(key) {
+    const emptyResponse = {
+      overall: 0
+    };
+
+    const instanceType = this.props.instanceType;
+    const gcData = this.props.data;
+    if (gcData === null || instanceType === null) return emptyResponse;
+    if (!(instanceType in gcData[key].instanceTypeData)) return emptyResponse;
+    return gcData[key].instanceTypeData[instanceType];
+  },
+
+  instanceTypeSizeData: function(instanceType, key) {
+    if (this.props.instanceType === null ||
+        !isSimpleInstanceType(this.props.instanceType) ||
+        this.props.data === null)
+      return null;
+
+    const selectedGCData = this.props.data;
+    const bucketLabels = selectedGCData[key].bucketSizes;
+    const bucketSizes = selectedGCData[key]
+      .instanceTypeData[instanceType].overallHistogram;
+    const labels = ['Bucket', 'Count'];
+    const data = [];
+    for (let i = 0; i < bucketSizes.length; i++) {
+      data.push(['<' + bucketLabels[i], bucketSizes[i]]);
+    }
+    console.log([labels, ...data]);
+    return [labels, ...data];
+  },
+
+  render: function() {
+    const instanceTypeSizeOptions = {
+      title: 'Size Histogram',
+      bars: 'vertical',
+      legend: {position: 'none'}
+    };
+    const instanceTypeSizeHeight = "300px";
+    let details = (
+      <div></div>
+    );
+    if (this.props.instanceType !== null) {
+      if (isSimpleInstanceType(this.props.instanceType)) {
+        details = (
+<div>
+  <h2>Details: <tt>{typeName(this.props.instanceType)}</tt></h2>
+  <div style={null}>
+    <div style={{width: '50%', float: 'left'}}>
+      <h3 style={{textAlign: 'center'}}>Live</h3>
+      <ul>
+        <li>Overall memory consumption: {this.selectedInstanceTypeData("live").overall / KB} KB</li>
+        <li>Overall count: {this.selectedInstanceTypeData("live").count}</li>
+      </ul>
+      <BarChart chartData={this.instanceTypeSizeData(this.props.instanceType, "live")}
+                chartOptions={instanceTypeSizeOptions}
+                chartStyle={{height: instanceTypeSizeHeight, margin: '30px'}} />
+    </div>
+    <div style={{width: '50%', float: 'left'}}>
+      <h3 style={{textAlign: 'center'}}>Dead</h3>
+      <ul>
+        <li>Overall memory consumption: {this.selectedInstanceTypeData("dead").overall / KB} KB</li>
+        <li>Overall count: {this.selectedInstanceTypeData("dead").count}</li>
+      </ul>
+      <BarChart chartData={this.instanceTypeSizeData(this.props.instanceType, "dead")}
+                chartOptions={instanceTypeSizeOptions}
+                chartStyle={{height: instanceTypeSizeHeight, margin: '30px'}} />
+    </div>
+  </div>
+</div>
+        );
+      } else {
+        details = (
+<div></div>
+        );
+      }
+    }
+
+    return (
+      <div>
+        {details}
+      </div>
+    );
+  }
+});
+
 module.exports = {
   CodeDetails: CodeDetails,
-  FixedArrayDetails: FixedArrayDetails
+  FixedArrayDetails: FixedArrayDetails,
+  InstanceTypeDetails: InstanceTypeDetails
 };
