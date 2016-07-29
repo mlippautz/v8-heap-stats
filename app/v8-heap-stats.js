@@ -295,7 +295,15 @@ export default React.createClass({
         minValue: this.selectedIsolateData() === null ? 0 : this.selectedIsolateData().start,
         maxValue: this.selectedIsolateData() === null ? 0 : this.selectedIsolateData().end
       },
-      vAxis: {title: "Memory consumption [KBytes]"}
+      vAxis: {title: "Memory consumption [KBytes]"},
+      chartArea: {
+        width: "90%",
+        height: "80%"
+      },
+      legend: {
+        position: "top",
+        maxLines: "2"
+      }
     };
     const mallocedOptions = {
       pointsVisible: false,
@@ -304,7 +312,12 @@ export default React.createClass({
         minValue: this.selectedIsolateData() === null ? 0 : this.selectedIsolateData().start,
         maxValue: this.selectedIsolateData() === null ? 0 : this.selectedIsolateData().end
       },
-      vAxis: {title: "Memory consumption [KBytes]"}
+      vAxis: {title: "Memory consumption [KBytes]"},
+      chartArea: {
+        width: "90%",
+        height: "80%"
+      },
+      legend: {position: 'none'}
     };
     const instanceTypeSizeOptions = {
       title: 'Size Histogram',
@@ -361,18 +374,17 @@ Show malloced memory:
 <input type="checkbox" checked={this.state.showMalloced} onChange={this.handleShowMallocedChange} />
           </li>
         </ul>
-
-        <div style={{display: this.state.showMalloced ? "inline" : "none"}} >
-        <LineChart ref="mallocedLineChart"
-                   chartData={this.mallocedData()}
-                   chartStyle={timelineStyle}
-                   chartOptions={mallocedOptions} />
-        </div>
         <AreaChart ref="timelineChart"
                    chartData={this.timelineDataGrouped()}
                    chartStyle={timelineStyle}
                    chartOptions={timelineOptions}
                    handleSelection={this.handleSelection} />
+        <div style={{display: this.state.showMalloced ? "inline" : "none"}} >
+          <LineChart ref="mallocedLineChart"
+                     chartData={this.mallocedData()}
+                     chartStyle={timelineStyle}
+                     chartOptions={mallocedOptions} />
+        </div>
         </div>
 
         <div style={{display: this.selectedInstanceType() === null ? "none" : "inline"}}>
