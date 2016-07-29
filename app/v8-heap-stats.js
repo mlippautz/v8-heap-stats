@@ -3,6 +3,7 @@ import React from "react";
 import TraceFileReader from "./trace-file-reader";  // eslint-disable-line no-unused-vars
 import {AreaChart, BarChart, LineChart, PieChart} from "./basic-charts";  // eslint-disable-line no-unused-vars
 import {CodeDetails, FixedArrayDetails} from "./components";  // eslint-disable-line no-unused-vars
+import {InstanceTypeGroups} from "./utils";
 
 const KB = 1024;
 
@@ -165,6 +166,60 @@ export default React.createClass({
     return [labels, ...dataset];
   },
 
+  timelineDataGrouped2: function() {
+    const isolateData = this.selectedIsolateData();
+    if (isolateData === null) return null;
+    const perGCData = isolateData.gcs;
+    const dataset = [];
+    const labels = ['Time [ms]'];
+    let groups = {
+      "Special JS Objects": {
+        select: name => InstanceTypeGroups.JSSpecialObjects.includes(name),
+        value: 0
+      },
+      "Strings": {
+        select: name => InstanceTypeGroups.Strings.includes(name),
+        value: 0
+      },
+      "Rest": {
+        select: name => InstanceTypeGroups.Rest.includes(name),
+        value: 0
+      }
+    };
+    let gcCount = 0;
+    for (let gc of Object.keys(perGCData)) {
+      dataset[gcCount] = [perGCData[gc].time];
+      for (let instanceType of isolateData.nonEmptyInstanceTypes) {
+        if (instanceType.startsWith("*")) continue;
+
+        const instanceTypeData = perGCData[gc].live.instanceTypeData;
+        let value = 0;
+        if (instanceType in instanceTypeData) {
+          value = instanceTypeData[instanceType].overall;
+        }
+
+        let grouped = false;
+        for (const key of Object.keys(groups)) {
+          if (groups[key].select(instanceType)) {
+            groups[key].value += value;
+            grouped = true;
+          }
+        }
+        if (!grouped) {
+          dataset[gcCount].push(instanceTypeData[instanceType].overall / KB);
+          if (gcCount === 0) labels.push(instanceType);
+        }
+      }
+      for (const key of Object.keys(groups)) {
+        if (gcCount === 0) labels.push(key);
+        dataset[gcCount].push(groups[key].value / KB);
+        groups[key].value = 0;
+      }
+      gcCount++;
+    }
+    return [labels, ...dataset];
+  },
+
   _rawData: function(key, header, selector, nameCallback, valueCallback) {
     const gcData = this.selectedGCData();
     if (gcData === null) return null;
@@ -297,12 +352,12 @@ export default React.createClass({
       },
       vAxis: {title: "Memory consumption [KBytes]"},
       chartArea: {
-        width: "90%",
+        width: "85%",
         height: "80%"
       },
       legend: {
         position: "top",
-        maxLines: "2"
+        maxLines: "3"
       }
     };
     const mallocedOptions = {
@@ -314,7 +369,7 @@ export default React.createClass({
       },
       vAxis: {title: "Memory consumption [KBytes]"},
       chartArea: {
-        width: "90%",
+        width: "85%",
         height: "80%"
       },
       legend: {position: 'none'}
@@ -366,16 +421,12 @@ to inspect details.
         </p>
         <ul>
           <li>
-InstanceType threshold:
-<input ref="threshold" type="text" value={this.state.threshold} onChange={this.handleThresholdChange} />
-          </li>
-          <li>
 Show malloced memory:
 <input type="checkbox" checked={this.state.showMalloced} onChange={this.handleShowMallocedChange} />
           </li>
         </ul>
         <AreaChart ref="timelineChart"
-                   chartData={this.timelineDataGrouped()}
+                   chartData={this.timelineDataGrouped2()}
                    chartStyle={timelineStyle}
                    chartOptions={timelineOptions}
                    handleSelection={this.handleSelection} />
