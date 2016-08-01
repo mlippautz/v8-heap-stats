@@ -153,17 +153,6 @@ var CodeDetails = React.createClass({
     return fullName.slice("*CODE_AGE_".length);
   },
 
-  codeData: function(key) {
-    if (this.props.data === null) return null;
-    const data = rawDataTransform(this.props.data,
-      key,
-      ['Memory consumption [Bytes]'],
-      name => name.startsWith("*CODE_") && !name.startsWith("*CODE_AGE_"),
-      name => this.subTypeName(name),
-      value => value === undefined ? 0 : [value.overall]);
-    return {data: data, colors: []};
-  },
-
   codeAgeData: function(key) {
     if (this.props.data === null) return null;
     const data = rawDataTransform(this.props.data,
@@ -187,15 +176,6 @@ var CodeDetails = React.createClass({
     };
     return (
       <div style={{display: this.props.show ? "inline" : "none"}} >
-        <h2>Code Distribution</h2>
-        <div style={subComponentStyle}>
-          <PieChart chartData={this.codeData("live")}
-                    chartOptions={null}
-                    chartStyle={chartStyle} />
-          <PieChart chartData={this.codeData("dead")}
-                    chartOptions={null}
-                    chartStyle={chartStyle} />
-        </div>
         <h2>Code Age</h2>
         <div style={subComponentStyle}>
           <PieChart chartData={this.codeAgeData("live")}
