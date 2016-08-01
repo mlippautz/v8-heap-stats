@@ -41,38 +41,6 @@ var FixedArrayDetails = React.createClass({
                    .slice(0, -("_SUB_TYPE".length));
   },
 
-  fixedArrayData: function(key) {
-    if (this.props.data === null) return null;
-    const colors = [];
-    const data = rawDataTransform(this.props.data,
-      key,
-      ['Memory consumption [Bytes]'],
-      name => name.startsWith("*FIXED_ARRAY_"),
-      name => {
-        colors.push(Colors.getColor(name));
-        return this.subTypeName(name);
-      },
-      value => value === undefined ? 0 : [value.overall]);
-    return {data: data, colors: colors};
-  },
-
-  fixedArraySubTypeData: function(key) {
-    if (this.props.data === null) return null;
-    if (this.state.selectedSubType === null) return null;
-    const selectedGCData = this.props.data;
-    const instanceType = this.state.selectedSubType;
-
-    const bucketLabels = selectedGCData[key].bucketSizes;
-    const bucketSizes = selectedGCData[key]
-      .instanceTypeData[instanceType].overallHistogram;
-    const labels = ['Bucket', 'Count'];
-    const data = [];
-    for (let i = 0; i < bucketSizes.length; i++) {
-      data.push(['<' + bucketLabels[i], bucketSizes[i]]);
-    }
-    return [labels, ...data];
-  },
-
   fixedArrayOverheadSubTypeData: function(key) {
     if (this.props.data === null) return null;
     if (this.state.selectedSubType === null) return null;
@@ -146,17 +114,6 @@ var FixedArrayDetails = React.createClass({
     };
     return (
       <div style={{display: this.props.show ? "inline" : "none"}} >
-        <h2>FixedArray Distribution</h2>
-        <div style={subComponentStyle}>
-          <PieChart chartData={this.fixedArrayData("live")}
-                    chartOptions={null}
-                    chartStyle={chartStyle}
-                    handleSelection={this.handleSelection} />
-          <PieChart chartData={this.fixedArrayData("dead")}
-                    chartOptions={null}
-                    chartStyle={chartStyle}
-                    handleSelection={this.handleSelection} />
-        </div>
         <h2>FixedArray Overhead</h2>
         <div style={subComponentStyle}>
           <BarChart chartData={this.fixedArrayOverheadData("live")}
@@ -168,17 +125,6 @@ var FixedArrayDetails = React.createClass({
         </div>
         <div style={{display: this.state.selectedSubType === null ?
                                   "none" : "inline"}} >
-          <h2>
-            Size Histogram: <tt>{this.subTypeName(this.state.selectedSubType)}</tt>
-          </h2>
-          <div style={subComponentStyleSmall}>
-            <BarChart chartData={this.fixedArraySubTypeData("live")}
-                      chartOptions={subTypeOptions}
-                      chartStyle={chartStyleSmall} />
-            <BarChart chartData={this.fixedArraySubTypeData("dead")}
-                      chartOptions={subTypeOptions}
-                      chartStyle={chartStyleSmall} />
-          </div>
           <h2>
             Overhead Histogram: <tt>{this.subTypeName(this.state.selectedSubType)}</tt>
           </h2>
@@ -297,7 +243,7 @@ const InstanceTypeDistribution = React.createClass({  // eslint-disable-line no-
     };
     return (
       <div>
-        <h2>Distribution: {this.props.instanceType}</h2>
+        <h2>Distribution: <tt>{this.props.instanceType}</tt></h2>
         <div style={subComponentStyle}>
           <PieChart chartData={this.getInstanceTypeData("live")}
                     chartOptions={null}
