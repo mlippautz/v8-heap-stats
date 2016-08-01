@@ -214,7 +214,32 @@ const InstanceTypeGroups = {
   ]
 };
 
+const InstanceSubTypeNames = {
+  FIXED_ARRAY_TYPE: {
+    keyToName: key => key.slice("*FIXED_ARRAY_".length)
+                         .slice(0, -("_SUB_TYPE".length)),
+    nameToKey: name => "*FIXED_ARRAY_" + name + "_SUB_TYPE"
+  },
+  CODE_TYPE: {
+    keyToName: key => key.slice("*CODE_".length),
+    nameToKey: name => "*CODE_" + name
+  },
+  Strings: {
+    keyToName: key => key,
+    nameToKey: name => name
+  },
+  Rest: {
+    keyToName: key => key,
+    nameToKey: name => name
+  },
+  JSSpecialObjects: {
+    keyToName: key => key,
+    nameToKey: name => name
+  }
+};
+
 module.exports = {
   Colors: Colors,
-  InstanceTypeGroups: InstanceTypeGroups
+  InstanceTypeGroups: InstanceTypeGroups,
+  InstanceSubTypeNames: InstanceSubTypeNames
 };

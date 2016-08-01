@@ -1,6 +1,6 @@
 import React from "react";
 import {AreaChart, BarChart, LineChart, PieChart} from "./basic-charts";  // eslint-disable-line no-unused-vars
-import {Colors, InstanceTypeGroups} from "./utils";  // eslint-disable-line no-unused-vars
+import {Colors, InstanceTypeGroups, InstanceSubTypeNames} from "./utils";  // eslint-disable-line no-unused-vars
 
 const KB = 1024;
 
@@ -204,13 +204,14 @@ const InstanceTypeDistribution = React.createClass({  // eslint-disable-line no-
       name => InstanceTypeGroups[this.props.instanceType].includes(name),
       name => {
         colors.push(Colors.getColor(name));
-        return name;
+        return InstanceSubTypeNames[this.props.instanceType].keyToName(name);
       },
       value => value === undefined ? 0 : [value.overall]);
     return {data: data, colors: colors};
   },
 
   handleSelection(item) {
+    item = InstanceSubTypeNames[this.props.instanceType].nameToKey(item);
     console.log("Selected sub type: " + item);
     this.props.handleSubTypeSelection(item);
   },
