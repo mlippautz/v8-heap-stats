@@ -18,7 +18,11 @@ function rawDataTransform(
 
 function typeName(fullName) {
   if (fullName === null) return null;
-  return fullName.slice(0, -("_TYPE".length));
+  if (fullName.endsWith("_SUB_TYPE"))
+    fullName = fullName.slice(0, -("_SUB_TYPE".length));
+  if (fullName.endsWith("_TYPE"))
+    fullName = fullName.slice(0, -("_TYPE".length));
+  return fullName;
 }
 
 function isSimpleInstanceType(name) {
