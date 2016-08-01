@@ -173,15 +173,15 @@ export default React.createClass({
     const dataset = [];
     const labels = ['Time [ms]'];
     const groups = {
-      "Special JS Objects": {
+      JSSpecialObjects: {
         select: name => InstanceTypeGroups.JSSpecialObjects.includes(name),
         value: 0
       },
-      "Strings": {
+      Strings: {
         select: name => InstanceTypeGroups.Strings.includes(name),
         value: 0
       },
-      "Rest": {
+      Rest: {
         select: name => InstanceTypeGroups.Rest.includes(name),
         value: 0
       }

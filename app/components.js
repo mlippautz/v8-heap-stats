@@ -264,7 +264,56 @@ var CodeDetails = React.createClass({
   }
 });
 
-var InstanceTypeDetails = React.createClass({
+const InstanceTypeDistribution = React.createClass({  // eslint-disable-line no-unused-vars
+  getInstanceTypeData(key) {
+    if (this.props.instanceTypes === null) return null;
+    const colors = [];
+    const data = rawDataTransform(this.props.data,
+      key,
+      ['Memory consumption [Bytes]'],
+      name => InstanceTypeGroups[this.props.instanceType].includes(name),
+      name => {
+        colors.push(Colors.getColor(name));
+        return name;
+      },
+      value => value === undefined ? 0 : [value.overall]);
+    return {data: data, colors: colors};
+  },
+
+  handleSelection(item) {
+    console.log("Selected sub type: " + item);
+    this.props.handleSubTypeSelection(item);
+  },
+
+  render() {
+    const subComponentStyle = {
+      height: "600px",
+      width: "100%"
+    };
+    const chartStyle = {
+      width: "50%",
+      height: "600px",
+      float: "left"
+    };
+    return (
+      <div>
+        <h2>Distribution: {this.props.instanceType}</h2>
+        <div style={subComponentStyle}>
+          <PieChart chartData={this.getInstanceTypeData("live")}
+                    chartOptions={null}
+                    chartStyle={chartStyle}
+                    handleSelection={this.handleSelection} />
+          <PieChart chartData={this.getInstanceTypeData("dead")}
+                    chartOptions={null}
+                    chartStyle={chartStyle}
+                    handleSelection={this.handleSelection} />
+        </div>
+      </div>
+    );
+  }
+});
+
+const InstanceTypeHistogram = React.createClass({  // eslint-disable-line no-unused-vars
   selectedInstanceTypeData: function(key) {
     const emptyResponse = {
       overall: 0
@@ -292,25 +341,19 @@ var InstanceTypeDetails = React.createClass({
     for (let i = 0; i < bucketSizes.length; i++) {
       data.push(['<' + bucketLabels[i], bucketSizes[i]]);
     }
-    console.log([labels, ...data]);
     return [labels, ...data];
   },
 
-  render: function() {
+  render() {
     const instanceTypeSizeOptions = {
       title: 'Size Histogram',
       bars: 'vertical',
       legend: {position: 'none'}
     };
     const instanceTypeSizeHeight = "300px";
-    let details = (
-      <div></div>
-    );
-    if (this.props.instanceType !== null) {
-      if (isSimpleInstanceType(this.props.instanceType)) {
-        details = (
+    return (
 <div>
-  <h2>Details: <tt>{typeName(this.props.instanceType)}</tt></h2>
+  <h2>Size Details: <tt>{typeName(this.props.instanceType)}</tt></h2>
   <div style={null}>
     <div style={{width: '50%', float: 'left'}}>
       <h3 style={{textAlign: 'center'}}>Live</h3>
@@ -334,10 +377,48 @@ var InstanceTypeDetails = React.createClass({
     </div>
   </div>
 </div>
+);
+  }
+});
+
+var InstanceTypeDetails = React.createClass({
+  getInitialState() {
+    return {
+      selectedSubType: null
+    };
+  },
+
+  handleSubTypeSelection(item) {
+    this.setState({
+      selectedSubType: item
+    });
+  },
+
+  render: function() {
+    let details = (
+      <div></div>
+    );
+    if (this.props.instanceType !== null) {
+      if (isSimpleInstanceType(this.props.instanceType)) {
+        details = (
+          <InstanceTypeHistogram data={this.props.data}
+                                 instanceType={this.props.instanceType} />
         );
       } else {
+        let subTypeHistogram = (<div></div>);
+        if (this.state.selectedSubType !== null) {
+          subTypeHistogram = (
+            <InstanceTypeHistogram data={this.props.data}
+                                   instanceType={this.state.selectedSubType} />
+          );
+        }
         details = (
-<div></div>
+          <div>
+            <InstanceTypeDistribution data={this.props.data}
+                                      instanceType={this.props.instanceType}
+                                      handleSubTypeSelection={this.handleSubTypeSelection} />
+            {subTypeHistogram}
+          </div>
         );
       }
     }
