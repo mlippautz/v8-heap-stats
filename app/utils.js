@@ -53,6 +53,8 @@ const Colors = {
   "*CODE_OPTIMIZED_FUNCTION": "#F44336",
   "*CODE_BUILTIN": "#E57373",
 
+  "JS_FUNCTION_TYPE": "#F44336",
+
   // Blue
   "*FIXED_ARRAY_CONTEXT_SUB_TYPE": "#2196F3",
   "*FIXED_ARRAY_DESCRIPTOR_ARRAY_SUB_TYPE": "#64B5F6",
@@ -60,6 +62,8 @@ const Colors = {
   "*FIXED_ARRAY_TEMPLATE_INSTANTIATIONS_CACHE_SUB_TYPE": "#90CAF9",
 
   "*CODE_FUNCTION": "#2196F3",
+
+  "JS_ARRAY_TYPE": "#2196F3",
 
   // Green
   "*FIXED_ARRAY_SHARED_FUNCTION_INFOS_SUB_TYPE": "#4CAF50",
@@ -72,9 +76,20 @@ const Colors = {
   "*FIXED_ARRAY_BYTECODE_ARRAY_HANDLER_TABLE_SUB_TYPE": "#FFF176",
   "*FIXED_ARRAY_BYTECODE_ARRAY_CONSTANT_POOL_SUB_TYPE": "#FFEB3B",
 
+  "randomColorPool": [
+    "#FFF176",  // Yellow
+    "#4CAF50",  // Green
+    "#F44336",  // Red
+    "#2196F3",  // Blue
+    "#795548",  // Brown
+    "#FF9800",  // Orange
+    "#B2DFDB",  // Teal
+    "#673AB7"  // Deep purple
+  ],
+
   getColor(name) {
     if (name in this) return this[name];
-    return "#999999";
+    return this.randomColorPool[Math.floor(Math.random() * this.randomColorPool.length)];
   }
 };
 
