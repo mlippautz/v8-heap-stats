@@ -22,6 +22,8 @@ function typeName(fullName) {
     fullName = fullName.slice(0, -("_SUB_TYPE".length));
   if (fullName.endsWith("_TYPE"))
     fullName = fullName.slice(0, -("_TYPE".length));
+  if (fullName.startsWith("*FIXED_ARRAY_"))
+    fullName = fullName.slice("*FIXED_ARRAY_".length);
   return fullName;
 }
 
@@ -32,7 +34,7 @@ function isSimpleInstanceType(name) {
   return true;
 }
 
-var FixedArrayDetails = React.createClass({
+var FixedArrayDetails = React.createClass({  // eslint-disable-line no-unused-vars
   getInitialState: function() {
     return {
       selectedSubType: null
@@ -68,7 +70,7 @@ var FixedArrayDetails = React.createClass({
       key,
       ['Payload [Bytes]', 'Overhead [Bytes]'],
       name => name.startsWith("*FIXED_ARRAY_"),
-      name => this.subTypeName(name),
+      name => typeName(name),
       value => value === undefined ?
         [0, 0] :
         [value.overall - value.overAllocated, value.overAllocated]
@@ -87,18 +89,9 @@ var FixedArrayDetails = React.createClass({
       height: "600px",
       width: "100%"
     };
-    const subComponentStyleSmall = {
-      height: "300px",
-      width: "100%"
-    };
     const chartStyle = {
       width: "50%",
       height: "600px",
-      float: "left"
-    };
-    const chartStyleSmall = {
-      width: "50%",
-      height: "300px",
       float: "left"
     };
     const fixedArrayOverheadOptions = {
@@ -112,10 +105,6 @@ var FixedArrayDetails = React.createClass({
         1: {color: '#DC3912'}
       }
     };
-    const subTypeOptions = {
-      bars: 'vertical',
-      legend: {position: 'none'}
-    };
     return (
       <div style={{display: this.props.show ? "inline" : "none"}} >
         <h2>FixedArray Overhead</h2>
@@ -127,26 +116,12 @@ var FixedArrayDetails = React.createClass({
                     chartOptions={fixedArrayOverheadOptions}
                     chartStyle={chartStyle} />
         </div>
-        <div style={{display: this.state.selectedSubType === null ?
-                                  "none" : "inline"}} >
-          <h2>
-            Overhead Histogram: <tt>{this.subTypeName(this.state.selectedSubType)}</tt>
-          </h2>
-          <div style={subComponentStyleSmall}>
-            <BarChart chartData={this.fixedArrayOverheadSubTypeData("live")}
-                      chartOptions={subTypeOptions}
-                      chartStyle={chartStyleSmall} />
-            <BarChart chartData={this.fixedArrayOverheadSubTypeData("dead")}
-                      chartOptions={subTypeOptions}
-                      chartStyle={chartStyleSmall} />
-          </div>
-        </div>
       </div>
     );
   }
 });
 
-var CodeDetails = React.createClass({
+var CodeDetails = React.createClass({  // eslint-disable-line no-unused-vars
   subTypeName: function(fullName) {
     if (fullName === null) return null;
     return fullName.slice("*CODE_".length);
@@ -218,12 +193,12 @@ const InstanceTypeDistribution = React.createClass({  // eslint-disable-line no-
 
   render() {
     const subComponentStyle = {
-      height: "600px",
+      height: "450px",
       width: "100%"
     };
     const chartStyle = {
       width: "50%",
-      height: "600px",
+      height: "450px",
       float: "left"
     };
     return (
@@ -245,15 +220,28 @@ const InstanceTypeDistribution = React.createClass({  // eslint-disable-line no-
 });
 
 const InstanceTypeHistogram = React.createClass({  // eslint-disable-line no-unused-vars
+  overAllocatedHistogram() {
+    if (this.props.overAllocated !== undefined &&
+        this.props.overAllocated === true) return true;
+    return false;
+  },
+
   selectedInstanceTypeData: function(key) {
     const emptyResponse = {
-      overall: 0
+      overall: 0,
+      count: 0
     };
 
     const instanceType = this.props.instanceType;
     const gcData = this.props.data;
     if (gcData === null || instanceType === null) return emptyResponse;
     if (!(instanceType in gcData[key].instanceTypeData)) return emptyResponse;
+    if (this.overAllocatedHistogram()) {
+      return {
+        overall: gcData[key].instanceTypeData[instanceType].overAllocated,
+        count: 0  // TODO: Data is missing.
+      };
+    }
     return gcData[key].instanceTypeData[instanceType];
   },
 
@@ -263,10 +251,14 @@ const InstanceTypeHistogram = React.createClass({  // eslint-disable-line no-unu
         this.props.data === null)
       return null;
 
+    const histogramPropery = this.props.overAllocated !== undefined &&
+                             this.props.overAllocated === true ?
+      "overAllocatedHistogram" : "overallHistogram";
+
     const selectedGCData = this.props.data;
     const bucketLabels = selectedGCData[key].bucketSizes;
     const bucketSizes = selectedGCData[key]
-      .instanceTypeData[instanceType].overallHistogram;
+      .instanceTypeData[instanceType][histogramPropery];
     const labels = ['Bucket', 'Count'];
     const data = [];
     for (let i = 0; i < bucketSizes.length; i++) {
@@ -284,13 +276,16 @@ const InstanceTypeHistogram = React.createClass({  // eslint-disable-line no-unu
     const instanceTypeSizeHeight = "300px";
     return (
 <div>
-  <h2>Size Details: <tt>{typeName(this.props.instanceType)}</tt></h2>
+  <h2>{this.overAllocatedHistogram() ? "Overhead" : "Size"} Details: <tt>{typeName(this.props.instanceType)}</tt></h2>
   <div style={null}>
     <div style={{width: '50%', float: 'left'}}>
       <h3 style={{textAlign: 'center'}}>Live</h3>
       <ul>
         <li>Overall memory consumption: {this.selectedInstanceTypeData("live").overall / KB} KB</li>
-        <li>Overall count: {this.selectedInstanceTypeData("live").count}</li>
+        {
+          this.overAllocatedHistogram() ? "" :
+            (<li>Overall count: {this.selectedInstanceTypeData("live").count}</li>)
+        }
       </ul>
       <BarChart chartData={this.instanceTypeSizeData(this.props.instanceType, "live")}
                 chartOptions={instanceTypeSizeOptions}
@@ -336,21 +331,26 @@ var InstanceTypeDetails = React.createClass({
                                  instanceType={this.props.instanceType} />
         );
       } else {
-        let subTypeHistogram = (<div></div>);
-        if (this.state.selectedSubType !== null) {
-          subTypeHistogram = (
-            <InstanceTypeHistogram data={this.props.data}
-                                   instanceType={this.state.selectedSubType} />
-          );
-        }
-        details = (
-          <div>
-            <InstanceTypeDistribution data={this.props.data}
-                                      instanceType={this.props.instanceType}
-                                      handleSubTypeSelection={this.handleSubTypeSelection} />
-            {subTypeHistogram}
-          </div>
-        );
+        details = (<div>
+          <InstanceTypeDistribution data={this.props.data}
+                                    instanceType={this.props.instanceType}
+                                    handleSubTypeSelection={this.handleSubTypeSelection} />
+          {
+            this.state.selectedSubType === null ? "" :
+              (<InstanceTypeHistogram data={this.props.data}
+                                      instanceType={this.state.selectedSubType} />)
+          }
+          {
+            this.state.selectedSubType !== null && this.props.instanceType === "FIXED_ARRAY_TYPE" ?
+              (<InstanceTypeHistogram data={this.props.data}
+                                      instanceType={this.state.selectedSubType}
+                                      overAllocated={true} />) : ""
+          }
+          <FixedArrayDetails show={this.props.instanceType === "FIXED_ARRAY_TYPE"}
+                            data={this.props.data} />
+          <CodeDetails show={this.props.instanceType === "CODE_TYPE"}
+                       data={this.props.data} />
+        </div>);
       }
     }
 
@@ -363,7 +363,5 @@ var InstanceTypeDetails = React.createClass({
 });
 
 module.exports = {
-  CodeDetails: CodeDetails,
-  FixedArrayDetails: FixedArrayDetails,
   InstanceTypeDetails: InstanceTypeDetails
 };

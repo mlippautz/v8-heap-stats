@@ -430,11 +430,6 @@ Show malloced memory:
         </div>
         </div>
         <InstanceTypeDetails instanceType={this.selectedInstanceType()} data={this.selectedGCData()} />
-        <FixedArrayDetails show={this.selectedInstanceType() === "FIXED_ARRAY_TYPE"}
-                           data={this.selectedGCData()} />
-
-        <CodeDetails show={this.selectedInstanceType() === "CODE_TYPE"}
-                     data={this.selectedGCData()} />
       </div>
     );
   }
