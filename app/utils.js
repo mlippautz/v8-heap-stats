@@ -129,7 +129,7 @@ const InstanceTypeGroups = {
     "SLICED_STRING_TYPE",
     "STRING_TYPE"
   ],
-  JSSpecialObjects: [
+  JS_OTHER: [
     "JS_API_OBJECT_TYPE",
     "JS_ARGUMENTS_TYPE",
     "JS_ARRAY_BUFFER_TYPE",
@@ -232,7 +232,7 @@ const InstanceSubTypeNames = {
     keyToName: key => key,
     nameToKey: name => name
   },
-  JSSpecialObjects: {
+  JS_OTHER: {
     keyToName: key => key,
     nameToKey: name => name
   }
