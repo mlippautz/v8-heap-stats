@@ -52,7 +52,9 @@ export default React.createClass({
           }
           if (entry.type === "malloced") {
             createEntryIfNeeded(entry);
-            data[entry.isolate].samples.malloced[entry.time] = entry.value;
+            const stacktrace = ("stacktrace" in entry) ? entry.stacktrace : [];
+            data[entry.isolate].samples.malloced[entry.time] =
+              {value: entry.value, stacktrace: stacktrace};
             if (entry.time > data[entry.isolate].end)
               data[entry.isolate].end = entry.time;
             if (data[entry.isolate].start === null)

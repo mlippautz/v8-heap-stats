@@ -2,7 +2,7 @@ import React from "react";
 
 import TraceFileReader from "./trace-file-reader";  // eslint-disable-line no-unused-vars
 import {AreaChart, BarChart, LineChart, PieChart} from "./basic-charts";  // eslint-disable-line no-unused-vars
-import {CodeDetails, FixedArrayDetails, InstanceTypeDetails} from "./components";  // eslint-disable-line no-unused-vars
+import {CodeDetails, FixedArrayDetails, InstanceTypeDetails, StackTrace} from "./components";  // eslint-disable-line no-unused-vars
 import {InstanceTypeGroups} from "./utils";
 
 const KB = 1024;
@@ -94,7 +94,7 @@ export default React.createClass({
     const dataset = [];
     for (let i = 0; i < timesAsDoubles.length; i++) {
       const time = timesAsDoubles[i];
-      dataset.push([time, isolateData.samples.malloced[time] / KB]);
+      dataset.push([time, isolateData.samples.malloced[time].value / KB]);
     }
     const labels = ['Time [ms]', 'malloced'];
     return [labels, ... dataset];
@@ -320,6 +320,22 @@ export default React.createClass({
     });
   },
 
+  handleMallocedSelection: function(column, value, label) {
+    const isolateData = this.selectedIsolateData();
+    if (isolateData === null) return null;
+
+    const st = isolateData.samples.malloced[value].stacktrace;
+    this.setState({
+      data: this.state.data,
+      threshold: this.state.threshold,
+      selectedGC: this.state.selected,
+      selectedInstanceType: this.state.selectedInstanceType,
+      selectedIsolate: this.state.selectedIsolate,
+      showMalloced: this.state.showMalloced,
+      mallocedStackTrace: st
+    });
+  },
+
   handleShowMallocedChange: function(e) {
     this.setState({
       data: this.state.data,
@@ -329,7 +345,8 @@ export default React.createClass({
       selectedInstanceType: this.state.selectedInstanceType,
       selectedIsolate: this.state.selectedIsolate,
 
-      showMalloced: e.target.checked
+      showMalloced: e.target.checked,
+      mallocedStackTrace: []
     });
   },
 
@@ -381,6 +398,9 @@ export default React.createClass({
           );
         });
 
+    const mallocedStackTrace = (this.state.showMalloced) ?
+      this.state.mallocedStackTrace : [];
+
     return (
       <div >
         <TraceFileReader onNewData={this.handleNewData} />
@@ -426,7 +446,9 @@ Show malloced memory:
           <LineChart ref="mallocedLineChart"
                      chartData={this.mallocedData()}
                      chartStyle={timelineStyle}
-                     chartOptions={mallocedOptions} />
+                     chartOptions={mallocedOptions}
+                     handleSelection={this.handleMallocedSelection} />
+          <StackTrace trace={mallocedStackTrace} />
         </div>
         </div>
         <InstanceTypeDetails instanceType={this.selectedInstanceType()} data={this.selectedGCData()} />

@@ -55,10 +55,19 @@ var LineChart = React.createClass({
     this._clearChartIfNecessary();
     if (this.props.chartData === null) return;
 
+    const data = google.visualization.arrayToDataTable(this.props.chartData);
     const chart = new google.visualization.LineChart(this.refs.chart);
-    chart.draw(google.visualization.arrayToDataTable(this.props.chartData),
-               this.props.chartOptions);
+    chart.draw(data, this.props.chartOptions);
     this.state.chart = chart;
+
+    const selectHandler = function() {
+      var selectedItem = chart.getSelection()[0];
+      if (selectedItem && ('handleSelection' in this.props)) {
+        this.props.handleSelection(selectedItem, data.getValue(selectedItem.row, 0),
+                                   data.getColumnLabel(selectedItem.column));
+      }
+    }.bind(this);
+    google.visualization.events.addListener(chart, 'select', selectHandler);
   },
   componentDidUpdate: function() {
     this.update();

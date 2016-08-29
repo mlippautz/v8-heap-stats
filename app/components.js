@@ -362,6 +362,22 @@ var InstanceTypeDetails = React.createClass({
   }
 });
 
+var StackTrace = React.createClass({
+  render: function() {
+    return (
+      <div>
+        <h3>StackTrace</h3>
+        <ul>
+          {this.props.trace.map((data, idx) => {
+            return (<li key={idx}>{data}</li>);
+          })}
+        </ul>
+      </div>
+    );
+  }
+});
+
 module.exports = {
-  InstanceTypeDetails: InstanceTypeDetails
+  InstanceTypeDetails: InstanceTypeDetails,
+  StackTrace: StackTrace
 };
