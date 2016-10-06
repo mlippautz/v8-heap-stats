@@ -377,7 +377,43 @@ var StackTrace = React.createClass({
   }
 });
 
+var ZoneList = React.createClass({
+  printSize: function(bytes) {
+    if (bytes < (1 << 10)) {
+      return bytes + " B";
+    } else if (bytes < (1 << 20)) {
+      return (bytes / (1 << 10)) + " KB";
+    } else if (bytes < (1 << 30)) {
+      return (bytes / (1 << 20)) + " MB";
+    }
+  },  
+  
+  keysBySize: function() {
+    return Object.keys(this.props.zones)
+      .sort((a, b) => this.props.zones[b].size - this.props.zones[a].size);
+  },
+
+  render: function() {
+    return (
+      <div>
+        <h3>Zones</h3>
+        <ul>
+          { 
+            this.keysBySize().map((key, idx) => {
+              return (<li key={idx}>
+                Zone: {key}, 
+                Name: {this.props.zones[key].name} <br />
+                Size: {this.printSize(this.props.zones[key].size)}
+              </li>);
+          })}
+        </ul>
+      </div>
+    );
+  }
+});
+
 module.exports = {
   InstanceTypeDetails: InstanceTypeDetails,
-  StackTrace: StackTrace
+  StackTrace: StackTrace,
+  ZoneList: ZoneList
 };

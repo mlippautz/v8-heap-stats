@@ -2,7 +2,7 @@ import React from "react";
 
 import TraceFileReader from "./trace-file-reader";  // eslint-disable-line no-unused-vars
 import {AreaChart, BarChart, LineChart, PieChart} from "./basic-charts";  // eslint-disable-line no-unused-vars
-import {CodeDetails, FixedArrayDetails, InstanceTypeDetails, StackTrace} from "./components";  // eslint-disable-line no-unused-vars
+import {CodeDetails, FixedArrayDetails, InstanceTypeDetails, StackTrace, ZoneList} from "./components";  // eslint-disable-line no-unused-vars
 import {InstanceTypeGroups} from "./utils";
 
 const KB = 1024;
@@ -328,6 +328,22 @@ export default React.createClass({
     if (isolateData === null) return null;
 
     const st = isolateData.samples.zone[value].stacktrace;
+    
+    var zones = {};
+    
+    for (var i = isolateData.zonetags.length - 1; i >= 0; i--) {
+      var tag = isolateData.zonetags[i];
+      if (tag.time < value) break;
+      if (tag.opening) {
+        delete zones[tag.ptr];
+      } else {
+        zones[tag.ptr] = {
+            name: tag.name,
+            size: tag.size
+        }
+      }
+    }
+    
     this.setState({
       data: this.state.data,
       threshold: this.state.threshold,
@@ -335,7 +351,8 @@ export default React.createClass({
       selectedInstanceType: this.state.selectedInstanceType,
       selectedIsolate: this.state.selectedIsolate,
       showZone: this.state.showZone,
-      zoneStackTrace: st
+      zoneStackTrace: st,
+      zones: zones
     });
   },
 
@@ -349,7 +366,8 @@ export default React.createClass({
       selectedIsolate: this.state.selectedIsolate,
 
       showZone: e.target.checked,
-      zoneStackTrace: []
+      zoneStackTrace: [],
+      zones: {}
     });
   },
 
@@ -403,7 +421,9 @@ export default React.createClass({
 
     const zoneStackTrace = (this.state.showZone) ?
       this.state.zoneStackTrace : [];
-
+    
+    const zones = (this.state.showZone) ?
+      this.state.zones : {};
     return (
       <div >
         <TraceFileReader onNewData={this.handleNewData} />
@@ -452,6 +472,7 @@ Show zone memory:
                      chartOptions={zoneOptions}
                      handleSelection={this.handleZoneSelection} />
           <StackTrace trace={zoneStackTrace} />
+          <ZoneList zones={zones} />
         </div>
         </div>
         <InstanceTypeDetails instanceType={this.selectedInstanceType()} data={this.selectedGCData()} />
