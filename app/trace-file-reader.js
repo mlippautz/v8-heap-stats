@@ -33,7 +33,7 @@ export default React.createClass({
               nonEmptyInstanceTypes: new Set(),
               gcs: {},
               samples: {
-                malloced: {}
+                zone: {}
               },
               start: null,
               end: null
@@ -50,11 +50,11 @@ export default React.createClass({
           if (entry === null || entry.type === undefined) {
             continue;
           }
-          if (entry.type === "malloced") {
+          if (entry.type === "zone") {
             createEntryIfNeeded(entry);
             const stacktrace = ("stacktrace" in entry) ? entry.stacktrace : [];
-            data[entry.isolate].samples.malloced[entry.time] =
-              {value: entry.value, stacktrace: stacktrace};
+            data[entry.isolate].samples.zone[entry.time] =
+              {allocated: entry.allocated, pooled: entry.pooled, stacktrace: stacktrace};
             if (entry.time > data[entry.isolate].end)
               data[entry.isolate].end = entry.time;
             if (data[entry.isolate].start === null)
@@ -66,8 +66,8 @@ export default React.createClass({
               data[entry.isolate].end = entry.time;
             if (data[entry.isolate].start === null)
               data[entry.isolate].start = entry.time;
-            if ("malloced" in entry)
-              data[entry.isolate].gcs[entry.id].malloced = entry.malloced;
+            if ("zone" in entry)
+              data[entry.isolate].gcs[entry.id].malloced = entry.zone;
           } else if (entry.type === "instance_type_data") {
             if (entry.id in data[entry.isolate].gcs) {
               createEntryIfNeeded(entry);
