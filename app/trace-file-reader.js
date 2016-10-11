@@ -32,6 +32,7 @@ export default React.createClass({
             data[entry.isolate] = {
               nonEmptyInstanceTypes: new Set(),
               gcs: {},
+              zonetags: [],
               samples: {
                 zone: {}
               },
@@ -55,6 +56,22 @@ export default React.createClass({
             const stacktrace = ("stacktrace" in entry) ? entry.stacktrace : [];
             data[entry.isolate].samples.zone[entry.time] =
               {allocated: entry.allocated, pooled: entry.pooled, stacktrace: stacktrace};
+            if (entry.time > data[entry.isolate].end)
+              data[entry.isolate].end = entry.time;
+            if (data[entry.isolate].start === null)
+              data[entry.isolate].start = entry.time;
+          } else if (entry.type === "zonecreation" || entry.type === "zonedestruction") {
+            createEntryIfNeeded(entry);
+            var tag = {
+                opening: entry.type === "zonecreation",
+                time: entry.time,
+                ptr: entry.ptr,
+                name: entry.name,
+                size: entry.size
+            };
+            
+            data[entry.isolate].zonetags.push(tag);
+            
             if (entry.time > data[entry.isolate].end)
               data[entry.isolate].end = entry.time;
             if (data[entry.isolate].start === null)
