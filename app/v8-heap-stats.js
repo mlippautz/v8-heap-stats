@@ -17,7 +17,7 @@ export default React.createClass({
       selectedGC: null,
       selectedInstanceType: null,
 
-      showMalloced: false
+      showZone: false
     };
   },
 
@@ -36,7 +36,7 @@ export default React.createClass({
       selectedGC: null,
       selectedInstanceType: null,
 
-      showMalloced: false
+      showZone: false
     });
   },
 
@@ -50,7 +50,7 @@ export default React.createClass({
       selectedGC: null,
       selectedInstanceType: null,
 
-      showMalloced: false
+      showZone: false
     });
   },
 
@@ -85,18 +85,21 @@ export default React.createClass({
     return [labels, ...dataset];
   },
 
-  mallocedData: function() {
+  zoneData: function() {
     const isolateData = this.selectedIsolateData();
     if (isolateData === null) return null;
-    const timesAsDoubles = Object.keys(isolateData.samples.malloced)
+    const timesAsDoubles = Object.keys(isolateData.samples.zone)
                                .map(e => parseFloat(e))
                                .sort((a, b) => a - b);
     const dataset = [];
     for (let i = 0; i < timesAsDoubles.length; i++) {
       const time = timesAsDoubles[i];
-      dataset.push([time, isolateData.samples.malloced[time].value / KB]);
+      dataset.push([
+        time, 
+        isolateData.samples.zone[time].allocated / KB, 
+        isolateData.samples.zone[time].pooled / KB]);
     }
-    const labels = ['Time [ms]', 'malloced'];
+    const labels = ['Time [ms]', 'allocated', 'pooled'];
     return [labels, ... dataset];
   },
 
@@ -294,7 +297,7 @@ export default React.createClass({
       selectedGC: this.state.selectedGC,
       selectedInstanceType: this.state.selectedInstanceType,
 
-      showMalloced: false
+      showZone: false
     });
   },
 
@@ -320,23 +323,23 @@ export default React.createClass({
     });
   },
 
-  handleMallocedSelection: function(column, value, label) {
+  handleZoneSelection: function(column, value, label) {
     const isolateData = this.selectedIsolateData();
     if (isolateData === null) return null;
 
-    const st = isolateData.samples.malloced[value].stacktrace;
+    const st = isolateData.samples.zone[value].stacktrace;
     this.setState({
       data: this.state.data,
       threshold: this.state.threshold,
       selectedGC: this.state.selected,
       selectedInstanceType: this.state.selectedInstanceType,
       selectedIsolate: this.state.selectedIsolate,
-      showMalloced: this.state.showMalloced,
-      mallocedStackTrace: st
+      showZone: this.state.showZone,
+      zoneStackTrace: st
     });
   },
 
-  handleShowMallocedChange: function(e) {
+  handleShowZoneChange: function(e) {
     this.setState({
       data: this.state.data,
       threshold: this.state.threshold,
@@ -345,8 +348,8 @@ export default React.createClass({
       selectedInstanceType: this.state.selectedInstanceType,
       selectedIsolate: this.state.selectedIsolate,
 
-      showMalloced: e.target.checked,
-      mallocedStackTrace: []
+      showZone: e.target.checked,
+      zoneStackTrace: []
     });
   },
 
@@ -375,7 +378,7 @@ export default React.createClass({
         maxLines: "3"
       }
     };
-    const mallocedOptions = {
+    const zoneOptions = {
       pointsVisible: false,
       hAxis: {
         ticks: [],
@@ -398,8 +401,8 @@ export default React.createClass({
           );
         });
 
-    const mallocedStackTrace = (this.state.showMalloced) ?
-      this.state.mallocedStackTrace : [];
+    const zoneStackTrace = (this.state.showZone) ?
+      this.state.zoneStackTrace : [];
 
     return (
       <div >
@@ -433,8 +436,8 @@ to inspect details.
         </p>
         <ul>
           <li>
-Show malloced memory:
-<input type="checkbox" checked={this.state.showMalloced} onChange={this.handleShowMallocedChange} />
+Show zone memory:
+<input type="checkbox" checked={this.state.showZone} onChange={this.handleShowZoneChange} />
           </li>
         </ul>
         <AreaChart ref="timelineChart"
@@ -442,13 +445,13 @@ Show malloced memory:
                    chartStyle={timelineStyle}
                    chartOptions={timelineOptions}
                    handleSelection={this.handleSelection} />
-        <div style={{display: this.state.showMalloced ? "inline" : "none"}} >
-          <LineChart ref="mallocedLineChart"
-                     chartData={this.mallocedData()}
+        <div style={{display: this.state.showZone ? "inline" : "none"}} >
+          <LineChart ref="zoneLineChart"
+                     chartData={this.zoneData()}
                      chartStyle={timelineStyle}
-                     chartOptions={mallocedOptions}
-                     handleSelection={this.handleMallocedSelection} />
-          <StackTrace trace={mallocedStackTrace} />
+                     chartOptions={zoneOptions}
+                     handleSelection={this.handleZoneSelection} />
+          <StackTrace trace={zoneStackTrace} />
         </div>
         </div>
         <InstanceTypeDetails instanceType={this.selectedInstanceType()} data={this.selectedGCData()} />
