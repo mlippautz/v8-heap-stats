@@ -63,15 +63,15 @@ export default React.createClass({
           } else if (entry.type === "zonecreation" || entry.type === "zonedestruction") {
             createEntryIfNeeded(entry);
             var tag = {
-                opening: entry.type === "zonecreation",
-                time: entry.time,
-                ptr: entry.ptr,
-                name: entry.name,
-                size: entry.size
+              opening: entry.type === "zonecreation",
+              time: entry.time,
+              ptr: entry.ptr,
+              name: entry.name,
+              size: entry.size
             };
-            
+
             data[entry.isolate].zonetags.push(tag);
-            
+
             if (entry.time > data[entry.isolate].end)
               data[entry.isolate].end = entry.time;
             if (data[entry.isolate].start === null)

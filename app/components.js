@@ -386,8 +386,8 @@ var ZoneList = React.createClass({
     } else if (bytes < (1 << 30)) {
       return (bytes / (1 << 20)) + " MB";
     }
-  },  
-  
+  },
+
   keysBySize: function() {
     return Object.keys(this.props.zones)
       .sort((a, b) => this.props.zones[b].size - this.props.zones[a].size);
@@ -398,14 +398,14 @@ var ZoneList = React.createClass({
       <div>
         <h3>Zones</h3>
         <ul>
-          { 
+          {
             this.keysBySize().map((key, idx) => {
               return (<li key={idx}>
-                Zone: {key}, 
+                Zone: {key},
                 Name: {this.props.zones[key].name} <br />
                 Size: {this.printSize(this.props.zones[key].size)}
               </li>);
-          })}
+            })}
         </ul>
       </div>
     );

@@ -95,8 +95,8 @@ export default React.createClass({
     for (let i = 0; i < timesAsDoubles.length; i++) {
       const time = timesAsDoubles[i];
       dataset.push([
-        time, 
-        isolateData.samples.zone[time].allocated / KB, 
+        time,
+        isolateData.samples.zone[time].allocated / KB,
         isolateData.samples.zone[time].pooled / KB]);
     }
     const labels = ['Time [ms]', 'allocated', 'pooled'];
@@ -328,9 +328,9 @@ export default React.createClass({
     if (isolateData === null) return null;
 
     const st = isolateData.samples.zone[value].stacktrace;
-    
+
     var zones = {};
-    
+
     for (var i = isolateData.zonetags.length - 1; i >= 0; i--) {
       var tag = isolateData.zonetags[i];
       if (tag.time < value) break;
@@ -338,12 +338,12 @@ export default React.createClass({
         delete zones[tag.ptr];
       } else {
         zones[tag.ptr] = {
-            name: tag.name,
-            size: tag.size
-        }
+          name: tag.name,
+          size: tag.size
+        };
       }
     }
-    
+
     this.setState({
       data: this.state.data,
       threshold: this.state.threshold,
@@ -421,7 +421,7 @@ export default React.createClass({
 
     const zoneStackTrace = (this.state.showZone) ?
       this.state.zoneStackTrace : [];
-    
+
     const zones = (this.state.showZone) ?
       this.state.zones : {};
     return (
@@ -432,6 +432,7 @@ export default React.createClass({
         <p style={{clear: "both"}}>
           Visualize object stats gathered using
           <tt>--trace-gc-object-stats</tt>.
+          Use either developer builds of V8 or Chromium, or the latest <a href="https://www.google.com/chrome/browser/canary.html">Chrome Canary</a> to obtain the data.
         </p>
 
         <p>
