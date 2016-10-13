@@ -343,7 +343,7 @@ export default React.createClass({
         };
       }
     }
-
+    
     this.setState({
       data: this.state.data,
       threshold: this.state.threshold,

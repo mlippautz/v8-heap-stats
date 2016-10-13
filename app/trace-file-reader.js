@@ -67,7 +67,12 @@ export default React.createClass({
               time: entry.time,
               ptr: entry.ptr,
               name: entry.name,
-              size: entry.size
+              size: {
+                total: entry.total_size,
+                used: entry.used_size,
+                segment_header: entry.segment_header_size,
+                wasted: entry.wasted_size
+              }
             };
 
             data[entry.isolate].zonetags.push(tag);

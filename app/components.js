@@ -390,7 +390,7 @@ var ZoneList = React.createClass({
 
   keysBySize: function() {
     return Object.keys(this.props.zones)
-      .sort((a, b) => this.props.zones[b].size - this.props.zones[a].size);
+      .sort((a, b) => this.props.zones[b].size.total - this.props.zones[a].size.total);
   },
 
   render: function() {
@@ -403,7 +403,12 @@ var ZoneList = React.createClass({
               return (<li key={idx}>
                 Zone: {key},
                 Name: {this.props.zones[key].name} <br />
-                Size: {this.printSize(this.props.zones[key].size)}
+                <strong>
+                Total Size: {this.printSize(this.props.zones[key].size.total)},
+                </strong>
+                Used Size: {this.printSize(this.props.zones[key].size.used)}, 
+                Wasted Size: {this.printSize(this.props.zones[key].size.wasted)}, 
+                Header Size: {this.printSize(this.props.zones[key].size.segment_header)} 
               </li>);
             })}
         </ul>
